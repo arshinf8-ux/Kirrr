@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>بوم دست · انرژی نفرین</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" onerror="this.remove()">
+<style>
+  :root{
+    --bg:#101214; --panel:#181b1f; --panel-2:#21262c; --line:#2d333b;
+    --text:#ecebe6; --muted:#98a1ad; --accent:#ff4f8b; --accent-ink:#1d0610; --danger:#ff6b6b;
+    font-family:"Vazirmatn","Vazir","Tahoma",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden}
+  body{display:flex;flex-direction:column;height:100dvh}
+
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px}
+  h1{font-size:17px;font-weight:700}
+  #chip{
+    font-size:13px;padding:6px 12px;border-radius:8px;background:var(--panel);
+    border:1px solid var(--line);color:var(--muted);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;max-width:66vw;transition:color .15s,border-color .15s;
+  }
+  #chip.on{color:var(--text);border-color:var(--accent)}
+
+  main{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 10px}
+  #stage{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);touch-action:none;cursor:crosshair;background:#06080a}
+  #stage canvas,#stage video{position:absolute;inset:0;width:100%;height:100%}
+  #stage video{object-fit:fill}
+  #stage.bg-dark{background:#14171b}
+  #stage.bg-white{background:#fafafa}
+  #stage.bg-grid{
+    background-color:#14171b;
+    background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);
+    background-size:5% 8.9%;
+  }
+
+  #start{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;padding:22px;text-align:center;background:rgba(16,18,20,.95);z-index:5;overflow:auto;
+  }
+  #start h2{font-size:20px}
+  #start p{max-width:36ch;color:var(--muted);line-height:1.9;font-size:14px}
+  #start{transition:opacity .25s,visibility .25s}
+  #start.hidden{opacity:0;visibility:hidden;pointer-events:none}
+  #warn{display:flex;flex-direction:column;gap:8px;max-width:38ch}
+  #warn p{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;line-height:1.8}
+  #err{color:var(--danger);font-size:13px;max-width:38ch;line-height:1.8;min-height:1em}
+  #status{color:var(--muted);font-size:13px;min-height:1em}
+
+  button,select{
+    font:inherit;color:var(--text);background:var(--panel-2);border:1px solid var(--line);
+    padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap;
+  }
+  button:hover,select:hover{border-color:var(--muted)}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700;font-size:15px;padding:11px 26px}
+  button:disabled{opacity:.6;cursor:default}
+  button.rec{background:var(--danger);border-color:var(--danger);color:#1a0505}
+
+  #bar{
+    display:flex;align-items:center;justify-content:center;gap:10px 14px;flex-wrap:wrap;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  }
+  .group{display:flex;align-items:center;gap:6px}
+  .sep{width:1px;height:22px;background:var(--line)}
+  .group label{font-size:13px;color:var(--muted)}
+  .swatch{width:24px;height:24px;border-radius:50%;padding:0;border:2px solid transparent}
+  .swatch[aria-checked="true"]{border-color:#fff;box-shadow:0 0 0 2px var(--bg) inset}
+  input[type=color]{width:28px;height:28px;padding:0;border:1px solid var(--line);border-radius:50%;background:none;cursor:pointer}
+  input[type=range]{width:90px;accent-color:var(--accent)}
+
+  #toast{
+    position:absolute;top:12px;left:50%;transform:translateX(-50%) translateY(-8px);
+    background:var(--panel);border:1px solid var(--line);padding:6px 14px;border-radius:8px;
+    font-size:13px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:4;white-space:nowrap;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  dialog{
+    margin:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);
+    border-radius:12px;padding:18px;width:min(94vw,480px);max-height:88dvh;overflow:auto;
+  }
+  dialog::backdrop{background:rgba(5,7,9,.72)}
+  dialog h2{font-size:16px;margin-bottom:10px}
+  dialog h3{font-size:13px;color:var(--accent);margin:16px 0 6px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td{padding:8px 0;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+  td:first-child{font-weight:700;width:42%;padding-inline-end:12px}
+  td small{display:block;color:var(--muted);font-size:12px}
+  dialog form.close{margin-top:16px;text-align:left}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:12px 0;font-size:14px}
+  .row input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}
+
+  @media (max-width:640px){
+    h1{font-size:15px} input[type=range]{width:70px}
+    #bar{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scrollbar-width:none}
+    #bar::-webkit-scrollbar{display:none}
+    #bar>*{flex:0 0 auto}
+  }
+
+  button,select{transition:background .15s,border-color .15s,color .15s,transform .1s}
+  button:active{transform:scale(.96)}
+  button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+  .seg{gap:0}
+  .seg button{border-radius:0}
+  .seg button:first-child{border-start-start-radius:8px;border-end-start-radius:8px}
+  .seg button:last-child{border-start-end-radius:8px;border-end-end-radius:8px}
+  #start .feat{display:flex;flex-direction:column;gap:6px;max-width:38ch;font-size:13px;color:var(--text);line-height:1.8;text-align:right}
+  #start .feat span{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 12px}
+  #hud{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:none;gap:6px;z-index:3;pointer-events:none}
+  #hud.show{display:flex}
+  #hud span{display:flex;align-items:center;gap:6px;font-size:12px;padding:5px 10px;border-radius:999px;background:rgba(16,18,20,.72);border:1px solid var(--line);color:var(--muted);transition:all .18s;white-space:nowrap}
+  #hud i{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.5}
+  #hud span.on i{opacity:1}
+  #hB.on{color:#8cc8ff;border-color:#4aa3ff;box-shadow:0 0 14px rgba(74,163,255,.55)}
+  #hR.on{color:#ff9a9a;border-color:#ff4a55;box-shadow:0 0 14px rgba(255,74,85,.55)}
+  #hP.on{color:#dcb0ff;border-color:#b659ff;box-shadow:0 0 14px rgba(182,89,255,.6)}
+  #hNR.on{color:#9cffc8;border-color:#35e58a;box-shadow:0 0 14px rgba(53,229,138,.5)}
+  #hNC.on{color:#9ce5ff;border-color:#37bfff;box-shadow:0 0 14px rgba(55,191,255,.5)}
+  #hNS.on{color:#ffb4e5;border-color:#ff5bc8;box-shadow:0 0 14px rgba(255,91,200,.5)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>بوم دست</h1>
+  <div id="chip" role="status" aria-live="polite">دوربین خاموشه</div>
+</header>
+
+<main>
+  <div id="stage" class="bg-camera">
+    <video id="video" playsinline muted></video>
+    <canvas id="ink"></canvas>
+    <canvas id="stamps"></canvas>
+    <canvas id="mag"></canvas>
+    <canvas id="fx"></canvas>
+    <div id="toast"></div>
+    <div id="hud" aria-hidden="true">
+      <span id="hB"><i></i>آبی · دو انگشت</span>
+      <span id="hR"><i></i>قرمز · یک انگشت</span>
+      <span id="hP"><i></i>بنفش · دو دست</span>
+      <span id="hNR"><i></i>راسن‌شوریکن</span>
+      <span id="hNC"><i></i>چیدوری</span>
+      <span id="hNS"><i></i>شارژ چاکرا</span>
+    </div>
+    <div id="start">
+      <h2>نقاشی با دست، انرژی نفرین و چاکرا</h2>
+      <p>دوربین رو روشن کن، دستت رو جلوش بگیر و بکش، پاک کن، قلب و ستاره بساز یا وارد حالت‌های جوجوتسو و ناروتو شو. تصویر فقط روی دستگاه خودت پردازش میشه و جایی ارسال نمیشه.</p>
+      <div class="feat">
+        <span>آبی، قرمز و بنفش توخالی با دست‌هات</span>
+      </div>
+      <div id="warn"></div>
+      <button class="primary" id="startBtn">روشن کردن دوربین</button>
+      <button id="mouseBtn">فقط با ماوس و لمس</button>
+      <div id="status"></div>
+      <div id="err"></div>
+    </div>
+  </div>
+</main>
+
+<div id="bar">
+  <div class="group seg" role="group" aria-label="حالت">
+    <button id="mDraw" class="on">نقاشی</button>
+    <button id="mJjk">جوجوتسو</button>
+    <button id="mNaruto">ناروتو</button>
+  </div>
+  <div class="sep"></div>
+  <div class="group" role="radiogroup" aria-label="رنگ" id="swatches"></div>
+  <input type="color" id="custom" aria-label="رنگ دلخواه" value="#ff4f8b">
+  <div class="sep"></div>
+  <div class="group">
+    <label for="size">ضخامت</label>
+    <input type="range" id="size" min="2" max="40" value="8">
+  </div>
+  <select id="style" aria-label="نوع قلم"></select>
+  <div class="sep"></div>
+  <div class="group">
+    <button id="undo" title="Ctrl+Z">برگشت</button>
+    <button id="redo" title="Ctrl+Y">جلو</button>
+    <button id="clear">پاک کردن</button>
+  </div>
+  <div class="sep"></div>
+  <div class="group">
+    <button id="save">ذخیره تصویر</button>
+    <button id="rec">ضبط</button>
+    <button id="cam">دوربین</button>
+    <button id="full">تمام‌صفحه</button>
+    <button id="settings">تنظیمات</button>
+    <button id="help">راهنما</button>
+  </div>
+</div>
+
+<dialog id="dlgSettings">
+  <h2>تنظیمات</h2>
+  <div class="row"><label for="sBg">پس‌زمینه</label>
+    <select id="sBg">
+      <option value="camera">دوربین</option>
+      <option value="dark">تخته تیره</option>
+      <option value="white">تخته سفید</option>
+      <option value="grid">کاغذ شطرنجی</option>
+    </select></div>
+  <div class="row"><label for="sCam">شفافیت دوربین</label>
+    <input type="range" id="sCam" min="10" max="100" value="100"></div>
+  <div class="row"><label for="sSmooth">نرمی خط</label>
+    <input type="range" id="sSmooth" min="0" max="100" value="40"></div>
+  <div class="row"><label for="sQual">تشخیص دست</label>
+    <select id="sQual">
+      <option value="0">سریع (برای گوشی)</option>
+      <option value="1">دقیق</option>
+    </select></div>
+  <div class="row"><label for="sSym">تقارن</label>
+    <select id="sSym"></select></div>
+  <div class="row"><label for="sSnap">اصلاح خودکار شکل‌ها (دایره، خط، مستطیل)</label>
+    <input type="checkbox" id="sSnap" checked></div>
+  <div class="row"><label for="sSkel">نمایش اسکلت دست</label>
+    <input type="checkbox" id="sSkel" checked></div>
+  <div class="row"><label for="sSound">صدا</label>
+    <input type="checkbox" id="sSound" checked></div>
+  <div class="row"><label for="sMirror">تصویر آینه‌ای</label>
+    <input type="checkbox" id="sMirror" checked></div>
+  <form method="dialog" class="close"><button class="primary" style="font-size:13px;padding:8px 18px">بستن</button></form>
+</dialog>
+
+<dialog id="dlgHelp">
+  <h2>ژست‌ها</h2>
+  <h3>یک دست</h3>
+  <table>
+    <tr><td>یک انگشت (اشاره)</td><td>کشیدن</td></tr>
+    <tr><td>دو انگشت</td><td>پاک‌کن</td></tr>
+    <tr><td>سه انگشت</td><td>رنگ بعدی</td></tr>
+    <tr><td>چهار انگشت، شست جمع</td><td>برگشت</td></tr>
+    <tr><td>کف دست باز و ثابت، ۱ ثانیه</td><td>پاک کردن کل صفحه</td></tr>
+    <tr><td>کف دست باز، حرکت سریع به چپ یا راست</td><td>چپ: برگشت، راست: جلو</td></tr>
+    <tr><td>پینچ (نوک شست و اشاره بهم)</td><td>روی یه شکل یا استیکر بگیر و ببر. با دو دست بزرگ و کوچیکش کن.<small>روی جای خالی ۱ ثانیه نگه دار تا یه قلب کوچیک بسازه</small></td></tr>
+    <tr><td>راک (اشاره و انگشت کوچیک)</td><td>ستاره</td></tr>
+    <tr><td>تلفن (شست و انگشت کوچیک)</td><td>قلم بعدی: نئون، رنگین‌کمان، اسپری و بقیه</td></tr>
+    <tr><td>اوکی (حلقه با شست و اشاره)</td><td>تقارن بعدی</td></tr>
+    <tr><td>شست بالا، ۱ ثانیه</td><td>ذخیره تصویر</td></tr>
+    <tr><td>مشت</td><td>مکث</td></tr>
+  </table>
+  <h3>دو دست</h3>
+  <table>
+    <tr><td>قلب با دو دست</td><td>نوک شست‌ها پایین و نوک اشاره‌ها بالا بهم برسه. یه قلب بزرگ با انیمیشن ساخته میشه.</td></tr>
+  </table>
+  <h3>حالت جوجوتسو (دکمه «جوجوتسو» پایین صفحه)</h3>
+  <table>
+    <tr><td>دو انگشت (اشاره و وسط)</td><td>آبی (لاپس). نگه دار تا شارژ بشه.</td></tr>
+    <tr><td>یک انگشت (اشاره)</td><td>قرمز (ریورسال)</td></tr>
+    <tr><td>آبی توی یه دست، قرمز توی دست دیگه، بیار نزدیک هم</td><td>ترکیب میشن و بنفش توخالی ساخته میشه. دستا رو دور کنی بزرگ‌تر میشه.</td></tr>
+    <tr><td>هر دو کف دست باز</td><td>شلیک بنفش. دستا رو همزمان سریع به یه سمت پرتاب کنی همون سمت شلیک میشه، وگرنه مستقیم میره سمت صفحه. هر چی کشیدی پاک میشه و با «برگشت» برمیگرده.</td></tr>
+    <tr><td>کف دست باز (وقتی آبی یا قرمز دستته)</td><td>شلیک اون گوی، به سمت انگشتت یا سمت حرکت دستت</td></tr>
+    <tr><td>مشت</td><td>لغو گوی</td></tr>
+  </table>
+  <h3>حالت ناروتو (دکمه «ناروتو» پایین صفحه)</h3>
+  <table>
+    <tr><td>یک انگشت ← دو انگشت ← یک انگشت</td><td>راسن‌گان؛ سه حرکت پشت سر هم، گوی چاکرای آبی ساخته می‌شود.</td></tr>
+    <tr><td>دو انگشت ← یک انگشت ← دو انگشت</td><td>چیدوری؛ سه حرکت پشت سر هم، برق آبی از دستت بیرون می‌آید.</td></tr>
+    <tr><td>کف دست ← یک انگشت ← کف دست ← دو انگشت</td><td>شوریکن؛ چهار حرکت پشت سر هم، شوریکن پرتاب می‌شود.</td></tr>
+    <tr><td>مشت ← یک انگشت ← مشت</td><td>آماتراسو؛ شعله‌های سیاه ظاهر می‌شوند.</td></tr>
+    <tr><td>هر دو کف دست باز و ثابت</td><td>سوسانو؛ سپر چاکرایی بزرگ برای چند لحظه فعال می‌شود.</td></tr>
+  </table>
+  <h3>ماوس و کیبورد</h3>
+  <table>
+    <tr><td>کلیک چپ و کشیدن</td><td>نقاشی</td></tr>
+    <tr><td>کلیک راست یا Shift</td><td>پاک‌کن</td></tr>
+    <tr><td>Ctrl+Z، Ctrl+Y، Delete</td><td>برگشت، جلو، پاک کردن همه</td></tr>
+  </table>
+  <p style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.8">نور کافی و پس‌زمینه ساده دقت رو بالا می‌بره. اگه خط‌ها می‌لرزن، «نرمی خط» رو از تنظیمات زیاد کن.</p>
+  <form method="dialog" class="close"><button class="primary" style="font-size:13px;padding:8px 18px">فهمیدم</button></form>
+</dialog>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const video = $('video'), inkC = $('ink'), stC = $('stamps'), mgC = $('mag'), fxC = $('fx'), stage = $('stage');
+const ink = inkC.getContext('2d'), stx = stC.getContext('2d'), mg = mgC.getContext('2d'), fx = fxC.getContext('2d');
+
+/* ================= constants & state ================= */
+const COLORS = ['#ff4f8b','#ffd23f','#4cc9f0','#7ae582','#ffffff','#b388ff'];
+const COLOR_NAMES = ['صورتی','زرد','آبی','سبز','سفید','بنفش'];
+const STYLES = [['pen','قلم ساده'],['neon','نئون'],['rainbow','رنگین‌کمان'],['spray','اسپری'],['calli','خوشنویسی'],['sparkle','ستاره‌دار'],['laser','لیزر']];
+const SYMS = [['off','بدون تقارن'],['mirror','آینه‌ای'],['4','۴ تایی'],['6','۶ تایی'],['8','۸ تایی']];
+const HAND_COLORS = ['#ff4f8b','#4cc9f0'];
+const CONNECTIONS = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],
+  [9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+const CHIP = {
+  draw:'در حال کشیدن', erase:'پاک‌کن', color:'رنگ بعدی', undo:'برگشت',
+  palm:'کف دست: ثابت نگه دار تا همه پاک بشه', save:'نگه دار تا ذخیره بشه', fist:'مکث',
+  pinch:'گرفتن و جابجایی', ok:'تقارن', rock:'ستاره', shaka:'قلم بعدی', none:'ژست نامشخص'
+};
+const UA = navigator.userAgent;
+const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(UA);
+const JCHIP = {erase:'آبی · لاپس', draw:'قرمز · ریورسال', palm:'کف دست: شلیک', undo:'کف دست: شلیک', fist:'مشت: لغو', none:'ژست نامشخص'};
+
+let W = 1280, H = 720;
+const app = {
+  color:COLORS[0], colorIdx:0, size:8, style:'pen', sym:'off', snap:true, skel:true,
+  sound:true, mirror:true, smooth:.4, bg:'camera', camOpacity:1, quality:IS_MOBILE ? 0 : 1,
+  running:false, starting:false, mode:'draw'
+};
+const sc = () => W / 1280;
+
+const items = [];
+const undoStack = [], redoStack = [];
+const particles = [];
+const laser = [];
+const overlay = {hands:[], cursors:[], rings:[]};
+// Render-side easing makes camera landmark updates feel fluid between detector frames.
+const smoothHands = [null, null];
+const smoothCursors = [];
+const lastTrigger = {};
+let heartN = 0, stampsDirty = true;
+
+const mkHand = () => ({hand:true, gesture:'none', cand:'none', candN:0, stroke:null, laser:false,
+  fx:null, fy:null, pt:null, holdStart:0, holdDone:false, hist:[], vh:[], last:null, lastT:0});
+const handState = [mkHand(), mkHand()];
+const mouse = {hand:false, stroke:null, laser:false};
+
+function cooldown(name, ms){
+  const n = performance.now();
+  if(!lastTrigger[name] || n - lastTrigger[name] > ms){ lastTrigger[name] = n; return true; }
+  return false;
+}
+const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const mid = (a,b) => ({x:(a.x+b.x)/2, y:(a.y+b.y)/2});
+const rnd = n => { const x = Math.sin(n*127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+const easeOutBack = t => 1 + 2.70158*Math.pow(t-1,3) + 1.70158*Math.pow(t-1,2);
+
+/* ================= sound ================= */
+let actx = null;
+function ensureAudio(){
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if(actx.state === 'suspended') actx.resume();
+  }catch(e){}
+}
+function tone(f, d=.12, type='sine', v=.08, delay=0){
+  if(!app.sound || !actx) return;
+  try{
+    const t = actx.currentTime + delay, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + d + .02);
+  }catch(e){}
+}
+const sfx = {
+  stamp:()=>{ tone(660,.15,'triangle'); tone(880,.2,'triangle',.07,.08); },
+  heart:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.28,'sine',.09,i*.07)),
+  color:()=>tone(520,.08,'square',.035),
+  clear:()=>{ tone(300,.25,'sawtooth',.045); tone(150,.3,'sawtooth',.045,.1); },
+  undo:()=>tone(400,.1,'triangle'),
+  save:()=>{ tone(784,.1); tone(1047,.2,'sine',.08,.1); },
+  pop:()=>tone(900,.08,'sine',.06)
+};
+
+/* ================= UI helpers ================= */
+let toastT;
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('show'), 1500);
+}
+function fit(){
+  const r = document.querySelector('main').getBoundingClientRect();
+  const s = Math.min((r.width-20)/W, r.height/H);
+  stage.style.width = Math.max(50, Math.floor(W*s)) + 'px';
+  stage.style.height = Math.max(50, Math.floor(H*s)) + 'px';
+}
+addEventListener('resize', fit);
+
+function setWorld(nw, nh){
+  if(nw === W && nh === H){ fit(); return; }
+  const fxk = nw / W, fyk = nh / H;
+  items.forEach(it=>{
+    if(it.kind === 'stamp'){ it.x *= fxk; it.y *= fyk; it.size *= fxk; }
+    else { it.size *= fxk; it.pts.forEach(p=>{ p.x *= fxk; p.y *= fyk; p.w *= fxk; }); }
+  });
+  W = nw; H = nh;
+  inkC.width = stC.width = mgC.width = fxC.width = W;
+  inkC.height = stC.height = mgC.height = fxC.height = H;
+  fit(); renderInk();
+}
+
+const sw = $('swatches');
+COLORS.forEach((c,i)=>{
+  const b = document.createElement('button');
+  b.className = 'swatch'; b.style.background = c; b.setAttribute('role','radio');
+  b.setAttribute('aria-label', COLOR_NAMES[i]); b.setAttribute('aria-checked', i === 0);
+  b.onclick = () => setColor(i);
+  sw.appendChild(b);
+});
+function setColor(i){
+  app.colorIdx = i; app.color = COLORS[i];
+  [...sw.children].forEach((b,j)=>b.setAttribute('aria-checked', j === i));
+  $('custom').value = COLORS[i];
+}
+$('custom').oninput = e => {
+  app.color = e.target.value; app.colorIdx = -1;
+  [...sw.children].forEach(b=>b.setAttribute('aria-checked', false));
+};
+function nextColor(){ setColor((app.colorIdx + 1) % COLORS.length); toast('رنگ: ' + COLOR_NAMES[app.colorIdx]); sfx.color(); }
+
+const styleSel = $('style'), symSel = $('sSym');
+STYLES.forEach(([v,n])=>styleSel.add(new Option(n, v)));
+SYMS.forEach(([v,n])=>symSel.add(new Option(n, v)));
+styleSel.onchange = () => app.style = styleSel.value;
+symSel.onchange = () => app.sym = symSel.value;
+function nextStyle(){
+  const i = STYLES.findIndex(s=>s[0] === app.style);
+  const n = STYLES[(i+1) % STYLES.length];
+  app.style = n[0]; styleSel.value = n[0]; toast('قلم: ' + n[1]); sfx.pop();
+}
+function nextSym(){
+  const i = SYMS.findIndex(s=>s[0] === app.sym);
+  const n = SYMS[(i+1) % SYMS.length];
+  app.sym = n[0]; symSel.value = n[0]; toast('تقارن: ' + n[1]); sfx.pop();
+}
+
+$('size').oninput = e => app.size = +e.target.value;
+$('undo').onclick = () => undo();
+$('redo').onclick = () => redo();
+$('clear').onclick = () => clearAll();
+$('save').onclick = () => saveImage();
+$('rec').onclick = () => toggleRec();
+$('cam').onclick = () => { startCamera(); };
+$('help').onclick = () => $('dlgHelp').showModal();
+$('settings').onclick = () => $('dlgSettings').showModal();
+$('full').onclick = () => {
+  if(document.fullscreenElement) document.exitFullscreen();
+  else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+  else toast('این مرورگر تمام‌صفحه رو پشتیبانی نمی‌کنه');
+};
+
+function applyBg(){
+  stage.className = 'bg-' + app.bg;
+  video.style.opacity = app.bg === 'camera' ? app.camOpacity : 0;
+  video.style.transform = app.mirror ? 'scaleX(-1)' : 'none';
+}
+$('sBg').onchange = e => { app.bg = e.target.value; applyBg(); };
+$('sCam').oninput = e => { app.camOpacity = e.target.value / 100; applyBg(); };
+$('sSmooth').oninput = e => app.smooth = e.target.value / 100;
+$('sQual').value = String(app.quality);
+$('sQual').onchange = e => {
+  app.quality = +e.target.value;
+  if(handsModel) handsModel.setOptions({modelComplexity:app.quality});
+};
+$('sSnap').onchange = e => app.snap = e.target.checked;
+$('sSkel').onchange = e => app.skel = e.target.checked;
+$('sSound').onchange = e => { app.sound = e.target.checked; ensureAudio(); };
+$('sMirror').onchange = e => { app.mirror = e.target.checked; applyBg(); };
+
+/* ================= history ================= */
+function pushAction(a){ undoStack.push(a); if(undoStack.length > 120) undoStack.shift(); redoStack.length = 0; }
+function removeItem(it){ const i = items.indexOf(it); if(i >= 0) items.splice(i,1); }
+function snapshot(it){
+  return it.kind === 'stroke' ? {pts: it.pts.map(p=>({...p}))} : {x:it.x, y:it.y, size:it.size};
+}
+function restoreSnap(it, s){
+  if(it.kind === 'stroke') it.pts = s.pts.map(p=>({...p})); else Object.assign(it, s);
+}
+function undo(){
+  const a = undoStack.pop();
+  if(!a){ toast('چیزی برای برگشتن نیست'); return; }
+  if(a.t === 'add') removeItem(a.item);
+  else if(a.t === 'clear') a.items.forEach(i=>items.push(i));
+  else if(a.t === 'xform') restoreSnap(a.item, a.before);
+  redoStack.push(a); renderInk(); toast('برگشت'); sfx.undo();
+}
+function redo(){
+  const a = redoStack.pop();
+  if(!a){ toast('چیزی برای جلو رفتن نیست'); return; }
+  if(a.t === 'add'){ items.push(a.item); if(a.item.kind === 'stamp') a.item.born = performance.now(); }
+  else if(a.t === 'clear') a.items.forEach(removeItem);
+  else if(a.t === 'xform') restoreSnap(a.item, a.after);
+  undoStack.push(a); renderInk(); toast('جلو'); sfx.undo();
+}
+function clearAll(){
+  if(!items.length){ toast('صفحه خالیه'); return; }
+  const removed = items.slice(); items.length = 0;
+  pushAction({t:'clear', items:removed}); renderInk();
+  spawn({type:'wave', x:W/2, y:H/2, size:Math.max(W,H), max:700, color:'#ffffff'});
+  toast('صفحه پاک شد'); sfx.clear();
+}
+
+/* ================= stroke rendering (smoothed curves) ================= */
+function forSym(ctx, s, fn){
+  if(s.erase || s.sym === 'off'){ fn(); return; }
+  const cx = W/2, cy = H/2;
+  if(s.sym === 'mirror'){
+    fn(); ctx.save(); ctx.translate(W,0); ctx.scale(-1,1); fn(); ctx.restore(); return;
+  }
+  const n = +s.sym;
+  for(let k = 0; k < n; k++){
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(k*2*Math.PI/n); ctx.translate(-cx,-cy); fn(); ctx.restore();
+  }
+}
+function strokeIt(ctx, s, w, i){
+  if(!s.erase && s.style === 'neon'){
+    ctx.strokeStyle = s.color; ctx.shadowColor = s.color; ctx.shadowBlur = s.size * 1.6; ctx.lineWidth = w; ctx.stroke();
+    ctx.shadowBlur = 0; ctx.strokeStyle = '#fff'; ctx.lineWidth = w * .35; ctx.stroke();
+  } else {
+    if(!s.erase && s.style === 'rainbow') ctx.strokeStyle = 'hsl(' + ((s.hue + i*5) % 360) + ',95%,60%)';
+    ctx.lineWidth = w; ctx.stroke();
+  }
+}
+/* piece i (1..n-1): curve between midpoints; piece n is the tail to the last point */
+function drawSegs(ctx, s, from, tail){
+  const p = s.pts, n = p.length; if(!n) return;
+  ctx.save();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if(s.erase){ ctx.globalCompositeOperation = 'destination-out'; ctx.strokeStyle = '#000'; ctx.fillStyle = '#000'; }
+  else { ctx.strokeStyle = s.color; ctx.fillStyle = s.color; }
+  const start = Math.max(from, 0);
+  if(s.style === 'spray' && !s.erase){
+    const cnt = Math.max(5, Math.round(s.size * .9)), dotR = Math.max(1, s.size * .07);
+    ctx.globalAlpha = .6;
+    for(let i = start; i < n; i++){
+      for(let j = 0; j < cnt; j++){
+        const a = rnd(s.seed + i*7.1 + j*3.3) * Math.PI * 2;
+        const r = Math.sqrt(rnd(s.seed + i*5.7 + j*9.1 + 1)) * s.size * 1.4;
+        ctx.beginPath(); ctx.arc(p[i].x + Math.cos(a)*r, p[i].y + Math.sin(a)*r, dotR, 0, 7); ctx.fill();
+      }
+    }
+  } else if(n === 1 && start === 0){
+    ctx.beginPath(); ctx.arc(p[0].x, p[0].y, s.size/2, 0, 7); ctx.fill();
+  } else {
+    const piece = i => {
+      ctx.beginPath();
+      if(i === 1 && n > 1){ const m = mid(p[0], p[1]); ctx.moveTo(p[0].x, p[0].y); ctx.lineTo(m.x, m.y); }
+      else if(i >= 2 && i < n){
+        const a = mid(p[i-2], p[i-1]), b = mid(p[i-1], p[i]);
+        ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo(p[i-1].x, p[i-1].y, b.x, b.y);
+      } else { const a = mid(p[n-2], p[n-1]); ctx.moveTo(a.x, a.y); ctx.lineTo(p[n-1].x, p[n-1].y); }
+      const wa = p[i-1].w, wb = p[Math.min(i, n-1)].w;
+      strokeIt(ctx, s, (s.style === 'calli' && !s.erase) ? (wa + wb)/2 : s.size, i);
+    };
+    for(let i = Math.max(start,1); i < n; i++) piece(i);
+    if(tail && n >= 2) piece(n);
+  }
+  ctx.restore();
+}
+function renderInk(){
+  ink.clearRect(0,0,W,H);
+  items.forEach(s=>{ if(s.kind === 'stroke') forSym(ink, s, ()=>drawSegs(ink, s, 0, true)); });
+  stampsDirty = true;
+}
+
+/* ================= stroke lifecycle ================= */
+function beginStroke(owner, mode, pt){
+  const erase = mode === 'erase';
+  if(!erase && app.style === 'laser'){ owner.laser = true; addPoint(owner, pt); return; }
+  const s = {
+    kind:'stroke', color:app.color, size:(erase ? app.size*3 : app.size) * W / 900,
+    style: erase ? 'pen' : app.style, erase, sym: erase ? 'off' : app.sym,
+    pts:[], seed:Math.random()*1000, hue:Math.random()*360
+  };
+  owner.stroke = s; items.push(s);
+  addPoint(owner, pt);
+}
+function addPoint(owner, pt){
+  if(owner.laser){ laser.push({x:pt.x, y:pt.y, t:performance.now()}); return; }
+  const s = owner.stroke; if(!s) return;
+  const last = s.pts[s.pts.length-1];
+  let w = s.size;
+  if(last){
+    const d = dist(pt, last);
+    if(d < 1.5*sc()) return;
+    if(s.style === 'calli' && !s.erase){
+      const target = s.size * clamp(2 - d/(14*sc()), .4, 1.7);
+      w = last.w*.65 + target*.35;
+    }
+  }
+  s.pts.push({x:pt.x, y:pt.y, w});
+  const from = s.pts.length - 1;
+  forSym(ink, s, ()=>drawSegs(ink, s, from, false));
+  if(s.style === 'sparkle' && Math.random() < .35) sparkle(pt.x, pt.y, 1);
+}
+function endStroke(owner){
+  owner.laser = false;
+  const s = owner.stroke; owner.stroke = null;
+  if(!s) return;
+  if(!s.pts.length || (owner.hand && s.pts.length < 4)){ removeItem(s); renderInk(); return; }
+  let snapped = false;
+  if(app.snap && !s.erase && s.style !== 'spray' && s.pts.length >= 12){
+    const r = snapShape(s);
+    if(r){
+      s.pts = r.pts; snapped = true; renderInk(); toast('شکل اصلاح شد: ' + r.name); sfx.pop();
+      const b = bboxOf(s); sparkle((b.x0+b.x1)/2, (b.y0+b.y1)/2, 6);
+    }
+  }
+  if(!snapped) forSym(ink, s, ()=>drawSegs(ink, s, s.pts.length, true));
+  pushAction({t:'add', item:s});
+}
+
+/* ================= shape snapping ================= */
+function densify(poly, step){
+  const out = [];
+  for(let i = 1; i < poly.length; i++){
+    const a = poly[i-1], b = poly[i], n = Math.max(1, Math.round(dist(a,b)/step));
+    for(let k = 0; k < n; k++) out.push({x:a.x + (b.x-a.x)*k/n, y:a.y + (b.y-a.y)*k/n, w:a.w});
+  }
+  out.push({...poly[poly.length-1]});
+  return out;
+}
+function snapShape(s){
+  const p = s.pts, n = p.length;
+  let len = 0, x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for(let i = 0; i < n; i++){
+    if(i) len += dist(p[i-1], p[i]);
+    x0 = Math.min(x0,p[i].x); x1 = Math.max(x1,p[i].x); y0 = Math.min(y0,p[i].y); y1 = Math.max(y1,p[i].y);
+  }
+  if(len < W*.06) return null;
+  const a = p[0], b = p[n-1], gap = dist(a,b), w = s.size;
+  if(gap > W*.05){
+    let maxDev = 0;
+    for(let i = 1; i < n-1; i++){
+      const dev = Math.abs((b.x-a.x)*(a.y-p[i].y) - (a.x-p[i].x)*(b.y-a.y)) / gap;
+      maxDev = Math.max(maxDev, dev);
+    }
+    if(maxDev < gap*.06 && len/gap < 1.2)
+      return {name:'خط', pts:densify([{x:a.x,y:a.y,w},{x:b.x,y:b.y,w}], 12*sc())};
+  }
+  if(gap < len*.22){
+    const bw = x1-x0, bh = y1-y0;
+    if(bw < W*.03 || bh < W*.03) return null;
+    const cx = (x0+x1)/2, cy = (y0+y1)/2, ra = bw/2, rb = bh/2;
+    const edge = .1*Math.min(bw,bh);
+    let near = 0, devSum = 0;
+    p.forEach(q=>{
+      const d = Math.min(Math.abs(q.x-x0), Math.abs(q.x-x1), Math.abs(q.y-y0), Math.abs(q.y-y1));
+      if(d < edge) near++;
+      devSum += Math.abs(Math.hypot((q.x-cx)/ra, (q.y-cy)/rb) - 1);
+    });
+    if(near/n > .86)
+      return {name:'مستطیل', pts:densify([{x:x0,y:y0,w},{x:x1,y:y0,w},{x:x1,y:y1,w},{x:x0,y:y1,w},{x:x0,y:y0,w}], 14*sc())};
+    if(devSum/n < .14){
+      const pts = [];
+      for(let i = 0; i <= 72; i++){
+        const t = i/72*Math.PI*2; pts.push({x:cx+Math.cos(t)*ra, y:cy+Math.sin(t)*rb, w});
+      }
+      return {name: Math.abs(ra-rb) < Math.min(ra,rb)*.15 ? 'دایره' : 'بیضی', pts};
+    }
+  }
+  return null;
+}
+
+/* ================= stamps ================= */
+function heartPath(c, s){
+  const k = s/32; c.beginPath();
+  for(let i = 0; i <= 72; i++){
+    const t = i/72*Math.PI*2;
+    const x = 16*Math.pow(Math.sin(t),3);
+    const y = -(13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t));
+    if(i) c.lineTo(x*k, (y-2.5)*k); else c.moveTo(x*k, (y-2.5)*k);
+  }
+  c.closePath();
+}
+function starPath(c, s){
+  const R = s/2, r = R*.46; c.beginPath();
+  for(let i = 0; i < 10; i++){
+    const a = -Math.PI/2 + i*Math.PI/5, rad = i%2 ? r : R;
+    if(i) c.lineTo(Math.cos(a)*rad, Math.sin(a)*rad); else c.moveTo(Math.cos(a)*rad, Math.sin(a)*rad);
+  }
+  c.closePath();
+}
+function drawStamp(c, it, k){
+  c.save(); c.translate(it.x, it.y); c.rotate(it.rot); c.scale(k,k);
+  const s = it.size;
+  if(it.shape === 'heart'){
+    const g = c.createLinearGradient(0,-s/2,0,s/2);
+    g.addColorStop(0,'#ff8fb3'); g.addColorStop(1,'#e8174f');
+    c.shadowColor = 'rgba(255,60,120,.85)'; c.shadowBlur = s*.22;
+    heartPath(c, s); c.fillStyle = g; c.fill(); c.shadowBlur = 0;
+    c.beginPath(); c.ellipse(-s*.19, -s*.2, s*.09, s*.05, -.6, 0, 7);
+    c.fillStyle = 'rgba(255,255,255,.5)'; c.fill();
+  } else {
+    const g = c.createLinearGradient(0,-s/2,0,s/2);
+    g.addColorStop(0,'#fff3a0'); g.addColorStop(1,'#ffb300');
+    c.shadowColor = 'rgba(255,200,40,.9)'; c.shadowBlur = s*.22;
+    starPath(c, s); c.fillStyle = g; c.fill(); c.shadowBlur = 0;
+    c.lineWidth = Math.max(1, s*.02); c.strokeStyle = 'rgba(255,255,255,.7)'; c.stroke();
+  }
+  c.restore();
+}
+function addStamp(shape, x, y, size){
+  const it = {kind:'stamp', shape, x, y, size, born:performance.now(), rot:(Math.random()-.5)*.3};
+  items.push(it); pushAction({t:'add', item:it}); stampsDirty = true; return it;
+}
+
+/* ================= bbox / hit test / grab ================= */
+function bboxOf(it){
+  if(it.kind === 'stamp'){ const r = it.size/2; return {x0:it.x-r, y0:it.y-r, x1:it.x+r, y1:it.y+r}; }
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  it.pts.forEach(p=>{ x0 = Math.min(x0,p.x); x1 = Math.max(x1,p.x); y0 = Math.min(y0,p.y); y1 = Math.max(y1,p.y); });
+  const pad = it.size; return {x0:x0-pad, y0:y0-pad, x1:x1+pad, y1:y1+pad};
+}
+function hitTest(pt){
+  for(let i = items.length-1; i >= 0; i--){
+    const it = items[i];
+    if(it.kind === 'stamp'){
+      if(dist(pt, it) < it.size*.6 + 30*sc()) return it;
+    } else if(!it.erase){
+      const r = Math.max(it.size, 24*sc()) + 22*sc();
+      for(let j = 0; j < it.pts.length; j += 2) if(dist(pt, it.pts[j]) < r) return it;
+    }
+  }
+  return null;
+}
+function centerOf(it){
+  if(it.kind === 'stamp') return {x:it.x, y:it.y};
+  let sx = 0, sy = 0; it.pts.forEach(p=>{ sx += p.x; sy += p.y; });
+  return {x:sx/it.pts.length, y:sy/it.pts.length};
+}
+function applyXform(it, snap, c, tx, ty, s){
+  if(it.kind === 'stamp'){
+    it.x = c.x + (snap.x-c.x)*s + tx; it.y = c.y + (snap.y-c.y)*s + ty; it.size = snap.size*s;
+  } else {
+    it.pts = snap.pts.map(p=>({x:c.x + (p.x-c.x)*s + tx, y:c.y + (p.y-c.y)*s + ty, w:p.w}));
+  }
+}
+const grab = {item:null, snap0:null, cur:null, center:null, mode:'', base:null};
+function updateGrab(pinchers){
+  if(!pinchers.length){ endGrab(); return; }
+  if(!grab.item){
+    for(const pc of pinchers){
+      const it = hitTest(pc.pt);
+      if(it){
+        grab.item = it; grab.snap0 = snapshot(it); grab.cur = snapshot(it);
+        grab.center = centerOf(it); grab.mode = 'one'; grab.base = {pt:{...pc.pt}};
+        sfx.pop(); break;
+      }
+    }
+    if(!grab.item) return;
+  }
+  const target = pinchers.length >= 2 ? 'two' : 'one';
+  const m = pinchers.length >= 2 ? mid(pinchers[0].pt, pinchers[1].pt) : pinchers[0].pt;
+  const d = pinchers.length >= 2 ? Math.max(20, dist(pinchers[0].pt, pinchers[1].pt)) : 0;
+  if(grab.mode !== target){
+    grab.cur = snapshot(grab.item); grab.center = centerOf(grab.item); grab.mode = target;
+    grab.base = target === 'two' ? {mid:{...m}, d} : {pt:{...m}};
+  }
+  if(grab.mode === 'one') applyXform(grab.item, grab.cur, grab.center, m.x-grab.base.pt.x, m.y-grab.base.pt.y, 1);
+  else applyXform(grab.item, grab.cur, grab.center, m.x-grab.base.mid.x, m.y-grab.base.mid.y, clamp(d/grab.base.d, .2, 6));
+  if(grab.item.kind === 'stroke') renderInk(); else stampsDirty = true;
+}
+function endGrab(){
+  if(!grab.item) return;
+  const after = snapshot(grab.item);
+  if(JSON.stringify(after) !== JSON.stringify(grab.snap0)) pushAction({t:'xform', item:grab.item, before:grab.snap0, after});
+  grab.item = null; renderInk();
+}
+
+/* ================= particles ================= */
+function spawn(o){
+  if(particles.length > 420) particles.shift();
+  particles.push(Object.assign({age:0, rot:0, vr:0, grav:0, drag:.99, vx:0, vy:0, size:10}, o));
+}
+function heartBurst(x, y, n){
+  const k = sc();
+  for(let i = 0; i < n; i++){
+    const a = -Math.PI/2 + (Math.random()-.5)*2.6, sp = (2 + Math.random()*6)*k;
+    spawn({type:'heart', x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, size:(10 + Math.random()*26)*k,
+      max:1100 + Math.random()*1000, grav:-.03*k, drag:.985, vr:(Math.random()-.5)*.06,
+      color:['#ff4d8d','#ff6f9c','#ff2e63','#ffa3c0'][i%4]});
+  }
+  spawn({type:'wave', x, y, size:260*k, max:700, color:'#ff4d8d'});
+}
+function sparkle(x, y, n){
+  const k = sc();
+  for(let i = 0; i < n; i++){
+    const a = Math.random()*Math.PI*2, sp = (.5 + Math.random()*3)*k;
+    spawn({type:'spark', x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, size:(5 + Math.random()*9)*k,
+      max:500 + Math.random()*500, grav:.03*k, drag:.96, vr:.1, color:'#fff3a0'});
+  }
+}
+function confetti(x, y, n){
+  const k = sc();
+  for(let i = 0; i < n; i++){
+    const a = -Math.PI/2 + (Math.random()-.5)*2.2, sp = (3 + Math.random()*8)*k;
+    spawn({type:'conf', x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, size:(6 + Math.random()*8)*k,
+      max:1400 + Math.random()*900, grav:.18*k, drag:.985, vr:(Math.random()-.5)*.4,
+      color:'hsl(' + Math.floor(Math.random()*360) + ',90%,60%)'});
+  }
+}
+function drawParticles(dt){
+  const f = dt/16.67;
+  for(let i = particles.length-1; i >= 0; i--){
+    const p = particles[i];
+    p.age += dt;
+    if(p.age >= p.max){ particles.splice(i,1); continue; }
+    const t = p.age/p.max;
+    p.vx *= Math.pow(p.drag, f); p.vy = p.vy*Math.pow(p.drag, f) + p.grav*f;
+    p.x += p.vx*f; p.y += p.vy*f; p.rot += p.vr*f;
+    fx.save();
+    fx.globalAlpha = 1 - t*t;
+    fx.translate(p.x, p.y); fx.rotate(p.rot);
+    if(p.type === 'heart'){
+      fx.fillStyle = p.color; heartPath(fx, p.size*(1 - t*.3)); fx.fill();
+    } else if(p.type === 'spark'){
+      fx.fillStyle = p.color; starPath(fx, p.size*(1 - t*.5)); fx.fill();
+    } else if(p.type === 'conf'){
+      fx.fillStyle = p.color; fx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+    } else if(p.type === 'dot'){
+      fx.globalCompositeOperation = 'lighter'; fx.fillStyle = p.color;
+      fx.beginPath(); fx.arc(0, 0, Math.max(.5, p.size*(1 - t*.5))/2, 0, 7); fx.fill();
+    } else if(p.type === 'wave'){
+      fx.strokeStyle = p.color; fx.lineWidth = 6*sc()*(1 - t);
+      fx.beginPath(); fx.arc(0, 0, p.size*easeOutBack(Math.min(1,t*.9))*.5, 0, Math.PI*2); fx.stroke();
+    }
+    fx.restore();
+  }
+}
+
+/* ================= One Euro filter ================= */
+class OneEuro{
+  constructor(){ this.mc = 1.5; this.b = .02; this.dc = 1; this.x = null; this.dx = 0; this.t = 0; }
+  a(cut, dt){ const tau = 1/(2*Math.PI*cut); return 1/(1 + tau/dt); }
+  f(x, t){
+    if(this.x === null){ this.x = x; this.t = t; return x; }
+    const dt = Math.max((t - this.t)/1000, 1/120); this.t = t;
+    const dx = (x - this.x)/dt;
+    this.dx += this.a(this.dc, dt)*(dx - this.dx);
+    const cut = this.mc + this.b*Math.abs(this.dx);
+    this.x += this.a(cut, dt)*(x - this.x);
+    return this.x;
+  }
+}
+
+/* ================= gesture analysis ================= */
+function classify(pl, prev){
+  const w = pl[0], scale = dist(pl[0], pl[9]) || 1;
+  const ext = (t,p) => dist(pl[t], w) > dist(pl[p], w)*1.12;
+  const idx = ext(8,6), md = ext(12,10), ring = ext(16,14), pink = ext(20,18);
+  const thumb = dist(pl[4], pl[5]) > .55*scale;
+  const thumbUp = thumb && pl[4].y < pl[3].y && pl[4].y < pl[5].y;
+
+  const pd = dist(pl[4], pl[8])/scale;
+  const thr = (prev === 'pinch' || prev === 'ok') ? .5 : .34;
+  if(pd < thr) return (md && ring && pink) ? 'ok' : 'pinch';
+
+  if(idx && pink && !md && !ring) return 'rock';
+  if(thumb && pink && !idx && !md && !ring) return 'shaka';
+  if(idx && !md && !ring && !pink) return 'draw';
+  if(idx && md && !ring && !pink) return 'erase';
+  if(idx && md && ring && !pink) return 'color';
+  if(idx && md && ring && pink) return thumb ? 'palm' : 'undo';
+  if(!idx && !md && !ring && !pink) return thumbUp ? 'save' : 'fist';
+  return 'none';
+}
+function detectHeart(a, b){
+  const s = (dist(a[0],a[9]) + dist(b[0],b[9]))/2 || 1;
+  const tt = dist(a[4], b[4]), ii = dist(a[8], b[8]);
+  const thumbY = (a[4].y + b[4].y)/2, idxY = (a[8].y + b[8].y)/2;
+  return tt < .9*s && ii < 1.1*s && (thumbY - idxY) > .35*s;
+}
+function rawPoint(pl, g){
+  if(g === 'erase') return mid(pl[8], pl[12]);
+  if(g === 'pinch') return mid(pl[4], pl[8]);
+  return {x:pl[8].x, y:pl[8].y};
+}
+function resetHand(h){
+  endStroke(h);
+  h.gesture = 'none'; h.cand = 'none'; h.candN = 0; h.fx = h.fy = null; h.pt = null; h.hist = []; h.vh = [];
+}
+
+function assignHands(pls, now){
+  const out = [null, null], h0 = handState[0], h1 = handState[1];
+  const fresh = h => h.last && now - h.lastT < 700;
+  if(pls.length === 1){
+    const pl = pls[0]; let best = 0, bd = 1e9;
+    handState.forEach((h, i)=>{ const d = fresh(h) ? dist(h.last, pl[0]) : 1e8 + i; if(d < bd){ bd = d; best = i; } });
+    out[best] = pl;
+  } else if(pls.length === 2){
+    const [a, b] = pls;
+    if(fresh(h0) && fresh(h1) && dist(a[0], h0.last) + dist(b[0], h1.last) > dist(b[0], h0.last) + dist(a[0], h1.last)){ out[0] = b; out[1] = a; }
+    else { out[0] = a; out[1] = b; }
+  }
+  out.forEach((pl, i)=>{ if(pl){ handState[i].last = {x:pl[0].x, y:pl[0].y}; handState[i].lastT = now; } });
+  return out;
+}
+
+/* ================= main detection handler ================= */
+function onResults(res){
+  const list = res.multiHandLandmarks || [];
+  const now = performance.now(), k = sc();
+  overlay.hands = []; overlay.cursors = []; overlay.rings = [];
+  const pls = list.slice(0,2).map(lm=>lm.map(p=>({x:(app.mirror ? 1-p.x : p.x)*W, y:p.y*H})));
+
+  const slotPls = assignHands(pls, now);
+  heartN = (app.mode === 'draw' && pls.length === 2 && detectHeart(pls[0], pls[1])) ? heartN + 1 : 0;
+  const suppress = heartN >= 2;
+  if(heartN >= 4 && cooldown('heart', 2000)){
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    pls.forEach(pl=>pl.forEach(p=>{ x0 = Math.min(x0,p.x); x1 = Math.max(x1,p.x); y0 = Math.min(y0,p.y); y1 = Math.max(y1,p.y); }));
+    const cx = (x0+x1)/2, cy = (y0+y1)/2, size = clamp(Math.max(x1-x0, y1-y0)*.85, 120*k, W*.7);
+    addStamp('heart', cx, cy, size); heartBurst(cx, cy, 30); sfx.heart(); toast('قلب');
+  }
+
+  const labels = [];
+  const pinchers = [];
+
+  handState.forEach((h,i)=>{
+    const pl = slotPls[i];
+    if(!pl){ resetHand(h); return; }
+    if(app.skel) overlay.hands.push({pl, color:HAND_COLORS[i]});
+
+    if(suppress){ resetHand(h); labels.push('قلب با دو دست'); return; }
+
+    const g = classify(pl, h.gesture);
+    if(g === h.cand) h.candN++; else { h.cand = g; h.candN = 1; }
+    const need = (g === 'draw' || g === 'erase') ? 3 : 2;
+    if(h.candN >= need && h.gesture !== g){
+      endStroke(h);
+      h.gesture = g; h.holdStart = now; h.holdDone = false; h.hist = []; h.fx = h.fy = null;
+    }
+    labels.push((app.mode === 'jjk' ? (JCHIP[h.gesture] || CHIP.none) : app.mode === 'naruto' ? (NAR_CHIP[h.gesture] || CHIP.none) : (CHIP[h.gesture] || CHIP.none)));
+    if(h.gesture === 'none') return;
+
+    const raw = rawPoint(pl, h.gesture);
+    h.fx = h.fx || new OneEuro(); h.fy = h.fy || new OneEuro();
+    h.fx.mc = h.fy.mc = 4 - app.smooth*3.4;
+    const pt = {x:h.fx.f(raw.x, now), y:h.fy.f(raw.y, now)};
+    h.pt = pt;
+    if(app.mode === 'jjk' || app.mode === 'naruto') return;
+
+    switch(h.gesture){
+      case 'draw':
+        if(!h.stroke && !h.laser) beginStroke(h, 'draw', pt); else addPoint(h, pt);
+        overlay.cursors.push({x:pt.x, y:pt.y, r:app.size*W/900/2 + 4*k, color:app.style === 'laser' ? '#ff3b3b' : app.color, fill:true});
+        break;
+      case 'erase':
+        if(!h.stroke) beginStroke(h, 'erase', pt); else addPoint(h, pt);
+        overlay.cursors.push({x:pt.x, y:pt.y, r:app.size*3*W/900/2, color:'#ffffff', fill:false});
+        break;
+      case 'color':
+        if(cooldown('color', 900)) nextColor();
+        overlay.cursors.push({x:pl[8].x, y:pl[8].y, r:12*k, color:app.color, fill:true});
+        break;
+      case 'undo':
+        if(cooldown('undo', 900)) undo();
+        break;
+      case 'palm': {
+        const c = pl[9];
+        h.hist.push({t:now, x:c.x});
+        while(h.hist.length && now - h.hist[0].t > 350) h.hist.shift();
+        const dx = c.x - h.hist[0].x;
+        if(Math.abs(dx) > W*.26 && cooldown('swipe', 900)){
+          if(dx < 0) undo(); else redo();
+          h.hist = []; h.holdDone = true; break;
+        }
+        if(Math.abs(dx) > W*.05) h.holdStart = now;
+        const prog = h.holdDone ? 0 : Math.min(1, (now - h.holdStart)/1000);
+        if(!h.holdDone) overlay.rings.push({x:c.x, y:c.y, prog, color:'#ff6b6b'});
+        if(prog >= 1 && !h.holdDone){ h.holdDone = true; clearAll(); }
+        break;
+      }
+      case 'save': {
+        const c = pl[9];
+        const prog = h.holdDone ? 0 : Math.min(1, (now - h.holdStart)/1000);
+        if(!h.holdDone) overlay.rings.push({x:c.x, y:c.y, prog, color:'#7ae582'});
+        if(prog >= 1 && !h.holdDone){ h.holdDone = true; saveImage(); }
+        break;
+      }
+      case 'rock':
+        if(cooldown('star', 800)){
+          const c = pl[9], size = clamp(dist(pl[0], pl[9])*1.6, 70*k, 260*k);
+          addStamp('star', c.x, c.y, size); sparkle(c.x, c.y, 16); confetti(c.x, c.y, 22); sfx.stamp(); toast('ستاره');
+        }
+        break;
+      case 'shaka':
+        if(cooldown('style', 1000)) nextStyle();
+        break;
+      case 'ok':
+        if(cooldown('sym', 1000)) nextSym();
+        break;
+      case 'pinch':
+        pinchers.push({h, pt});
+        break;
+    }
+  });
+
+  if(app.mode === 'jjk') jjkUpdate(slotPls, now);
+  else if(app.mode === 'naruto') narUpdate(slotPls, now);
+  updateGrab(pinchers);
+  pinchers.forEach(pc=>{
+    const h = pc.h;
+    if(grab.item){ h.holdDone = true; return; }
+    const prog = h.holdDone ? 0 : Math.min(1, (now - h.holdStart)/900);
+    if(!h.holdDone) overlay.rings.push({x:pc.pt.x, y:pc.pt.y, prog, color:'#ff4d8d'});
+    else overlay.cursors.push({x:pc.pt.x, y:pc.pt.y, r:8*k, color:'#ffffff', fill:false});
+    if(prog >= 1 && !h.holdDone){
+      h.holdDone = true;
+      addStamp('heart', pc.pt.x, pc.pt.y - 40*k, 90*k); heartBurst(pc.pt.x, pc.pt.y, 10); sfx.stamp();
+    }
+  });
+
+  const chip = $('chip');
+  if(labels.length){ chip.textContent = [...new Set(labels)].join(' | '); chip.classList.add('on'); }
+  else { chip.textContent = 'دستت رو جلوی دوربین بگیر'; chip.classList.remove('on'); }
+}
+
+/* ================= render loop ================= */
+function loop(now){
+  const dt = Math.min(50, now - (loop.t || now)); loop.t = now;
+  const k = sc();
+  fx.clearRect(0,0,W,H); mg.clearRect(0,0,W,H);
+
+  let animating = false;
+  for(const it of items) if(it.kind === 'stamp' && now - it.born < 500){ animating = true; break; }
+  if(stampsDirty || animating){
+    stx.clearRect(0,0,W,H);
+    items.forEach(it=>{
+      if(it.kind === 'stamp') drawStamp(stx, it, easeOutBack(Math.min(1, (now - it.born)/450)));
+    });
+    stampsDirty = false;
+  }
+
+  if(app.sym !== 'off'){
+    fx.save(); fx.strokeStyle = 'rgba(255,255,255,.22)'; fx.lineWidth = 1.5*k; fx.setLineDash([10*k, 10*k]);
+    fx.beginPath();
+    if(app.sym === 'mirror'){ fx.moveTo(W/2,0); fx.lineTo(W/2,H); }
+    else {
+      const n = +app.sym, R = Math.hypot(W,H);
+      for(let i = 0; i < n; i++){
+        const a = i*Math.PI/n;
+        fx.moveTo(W/2 - Math.cos(a)*R, H/2 - Math.sin(a)*R); fx.lineTo(W/2 + Math.cos(a)*R, H/2 + Math.sin(a)*R);
+      }
+    }
+    fx.stroke(); fx.restore();
+  }
+
+  while(laser.length && now - laser[0].t > 900) laser.shift();
+  if(laser.length > 1){
+    fx.save(); fx.lineCap = 'round'; fx.lineJoin = 'round';
+    fx.strokeStyle = '#ff3b3b'; fx.shadowColor = '#ff3b3b'; fx.shadowBlur = 12*k;
+    for(let i = 1; i < laser.length; i++){
+      const a = 1 - (now - laser[i].t)/900;
+      fx.globalAlpha = Math.max(0, a); fx.lineWidth = 7*k*a + 1;
+      fx.beginPath(); fx.moveTo(laser[i-1].x, laser[i-1].y); fx.lineTo(laser[i].x, laser[i].y); fx.stroke();
+    }
+    fx.restore();
+  }
+
+  if(grab.item){
+    const b = bboxOf(grab.item);
+    fx.save(); fx.strokeStyle = '#fff'; fx.lineWidth = 2*k; fx.setLineDash([8*k, 6*k]);
+    fx.strokeRect(b.x0, b.y0, b.x1-b.x0, b.y1-b.y0); fx.restore();
+  }
+
+  const ease = 1 - Math.exp(-dt/34);
+  const seenHands = new Set();
+  overlay.hands.forEach(({pl, color}, idx)=>{
+    seenHands.add(idx);
+    let state = smoothHands[idx];
+    if(!state || state.color !== color){ state = smoothHands[idx] = {color, pl:pl.map(p=>({x:p.x,y:p.y}))}; }
+    else pl.forEach((p,j)=>{ state.pl[j].x += (p.x-state.pl[j].x)*ease; state.pl[j].y += (p.y-state.pl[j].y)*ease; });
+    const pts = state.pl;
+    fx.save(); fx.strokeStyle = 'rgba(255,255,255,.58)'; fx.lineWidth = 2.1*k; fx.lineCap='round';
+    fx.beginPath();
+    CONNECTIONS.forEach(([a,b])=>{ fx.moveTo(pts[a].x, pts[a].y); fx.lineTo(pts[b].x, pts[b].y); });
+    fx.stroke();
+    pts.forEach((p,j)=>{ fx.beginPath(); fx.arc(p.x, p.y, (j===0||j===8?4.2:3.1)*k, 0, 7); fx.fillStyle = j===8 ? '#ffffff' : color; fx.shadowColor=color; fx.shadowBlur=j===8?8*k:0; fx.fill(); });
+    fx.restore();
+  });
+  smoothHands.forEach((h,i)=>{ if(h && !seenHands.has(i)) smoothHands[i]=null; });
+
+  overlay.cursors.forEach((c,i)=>{
+    let p=smoothCursors[i];
+    if(!p) p=smoothCursors[i]={x:c.x,y:c.y,r:c.r,color:c.color,fill:c.fill};
+    else { p.x+=(c.x-p.x)*ease; p.y+=(c.y-p.y)*ease; p.r+=(c.r-p.r)*ease; p.color=c.color; p.fill=c.fill; }
+    fx.save(); fx.beginPath(); fx.arc(p.x, p.y, p.r, 0, 7);
+    if(p.fill){ fx.globalAlpha = .9; fx.fillStyle = p.color; fx.fill(); fx.globalAlpha = 1; }
+    fx.lineWidth = 2*k; fx.strokeStyle = '#fff'; fx.stroke(); fx.restore();
+  });
+  smoothCursors.length = overlay.cursors.length;
+
+  overlay.rings.forEach(r=>{
+    fx.save(); fx.lineWidth = 8*k; fx.lineCap = 'round';
+    fx.strokeStyle = 'rgba(255,255,255,.25)'; fx.beginPath(); fx.arc(r.x, r.y, 36*k, 0, Math.PI*2); fx.stroke();
+    fx.strokeStyle = r.color; fx.beginPath(); fx.arc(r.x, r.y, 36*k, -Math.PI/2, -Math.PI/2 + Math.PI*2*r.prog); fx.stroke();
+    fx.restore();
+  });
+
+  jjkStep(now, dt);
+  narStep(now, dt);
+  drawParticles(dt);
+
+  if(rec){
+    compose(compX, true);
+    if(now - (loop.rt || 0) > 500){
+      loop.rt = now;
+      const s = Math.floor((now - recStart)/1000);
+      $('rec').textContent = 'توقف ' + String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ================= export ================= */
+function drawBg(ctx){
+  ctx.fillStyle = app.bg === 'white' ? '#fafafa' : app.bg === 'camera' ? '#06080a' : '#14171b';
+  ctx.fillRect(0,0,W,H);
+  if(app.bg === 'grid'){
+    ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.lineWidth = 1; ctx.beginPath();
+    for(let x = 0; x <= W; x += W/20){ ctx.moveTo(x,0); ctx.lineTo(x,H); }
+    for(let y = 0; y <= H; y += H/11.25){ ctx.moveTo(0,y); ctx.lineTo(W,y); }
+    ctx.stroke();
+  }
+  if(app.bg === 'camera' && video.readyState >= 2 && app.running){
+    ctx.save(); ctx.globalAlpha = app.camOpacity;
+    if(app.mirror){ ctx.translate(W,0); ctx.scale(-1,1); }
+    ctx.drawImage(video, 0, 0, W, H); ctx.restore();
+  }
+}
+function compose(ctx, withFx){
+  drawBg(ctx);
+  ctx.drawImage(inkC, 0, 0); ctx.drawImage(stC, 0, 0); ctx.drawImage(mgC, 0, 0);
+  if(withFx) ctx.drawImage(fxC, 0, 0);
+}
+function download(blob, name){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+}
+function saveImage(){
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  compose(c.getContext('2d'), false);
+  c.toBlob(b=>{ if(b){ download(b, 'hand-draw-' + Date.now() + '.png'); toast('تصویر ذخیره شد'); sfx.save(); } });
+  confetti(W/2, H*.8, 26);
+}
+let rec = null, recStart = 0, compC = null, compX = null, recChunks = [];
+function toggleRec(){
+  if(rec){ rec.stop(); return; }
+  if(!window.MediaRecorder){ toast('این مرورگر ضبط ویدیو رو پشتیبانی نمی‌کنه'); return; }
+  compC = compC || document.createElement('canvas');
+  compC.width = W; compC.height = H; compX = compC.getContext('2d');
+  const stream = compC.captureStream(30);
+  const mime = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4']
+    .find(m=>MediaRecorder.isTypeSupported(m));
+  try{ rec = new MediaRecorder(stream, mime ? {mimeType:mime, videoBitsPerSecond:5e6} : undefined); }
+  catch(e){ rec = null; toast('شروع ضبط ممکن نشد'); return; }
+  recChunks = [];
+  rec.ondataavailable = e => { if(e.data && e.data.size) recChunks.push(e.data); };
+  rec.onstop = () => {
+    const type = rec.mimeType || 'video/webm';
+    download(new Blob(recChunks, {type}), 'hand-draw-' + Date.now() + (type.includes('mp4') ? '.mp4' : '.webm'));
+    rec = null; $('rec').classList.remove('rec'); $('rec').textContent = 'ضبط';
+    toast('ویدیو ذخیره شد');
+  };
+  rec.start(); recStart = performance.now(); $('rec').classList.add('rec'); toast('ضبط شروع شد');
+}
+
+/* ================= mouse / touch ================= */
+function stagePt(e){
+  const r = stage.getBoundingClientRect();
+  return {x:(e.clientX - r.left)/r.width*W, y:(e.clientY - r.top)/r.height*H};
+}
+let pointerDown = false;
+stage.addEventListener('contextmenu', e=>e.preventDefault());
+stage.addEventListener('pointerdown', e=>{
+  if(app.mode === 'jjk' || !$('start').classList.contains('hidden')) return;
+  ensureAudio();
+  pointerDown = true; stage.setPointerCapture(e.pointerId);
+  beginStroke(mouse, (e.button === 2 || e.shiftKey) ? 'erase' : 'draw', stagePt(e));
+});
+stage.addEventListener('pointermove', e=>{
+  if(!pointerDown) return;
+  const pt = stagePt(e);
+  addPoint(mouse, pt);
+  overlay.cursors = [{x:pt.x, y:pt.y, r:app.size*W/900/2 + 3, color:app.color, fill:true}];
+});
+const upHandler = () => { if(pointerDown){ pointerDown = false; endStroke(mouse); overlay.cursors = []; } };
+stage.addEventListener('pointerup', upHandler);
+stage.addEventListener('pointercancel', upHandler);
+
+addEventListener('keydown', e=>{
+  if(e.target.matches && e.target.matches('input,select,textarea')) return;
+  const key = e.key.toLowerCase(), mod = e.ctrlKey || e.metaKey;
+  if(mod && key === 'z'){ e.preventDefault(); e.shiftKey ? redo() : undo(); }
+  else if(mod && key === 'y'){ e.preventDefault(); redo(); }
+  else if(mod && key === 's'){ e.preventDefault(); saveImage(); }
+  else if(key === 'delete'){ clearAll(); }
+});
+
+/* ================= extra sounds ================= */
+function sweep(f0, f1, d=.5, type='sine', v=.07){
+  if(!app.sound || !actx) return;
+  try{
+    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + d);
+    g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + d + .02);
+  }catch(e){}
+}
+function boom(d=.7, v=.2, f=500){
+  if(!app.sound || !actx) return;
+  try{
+    const n = Math.floor(actx.sampleRate*d), b = actx.createBuffer(1, n, actx.sampleRate), c = b.getChannelData(0);
+    for(let i = 0; i < n; i++) c[i] = (Math.random()*2 - 1) * Math.pow(1 - i/n, 2);
+    const s = actx.createBufferSource(), g = actx.createGain(), fl = actx.createBiquadFilter();
+    fl.type = 'lowpass'; fl.frequency.value = f; g.gain.value = v; s.buffer = b;
+    s.connect(fl); fl.connect(g); g.connect(actx.destination); s.start();
+  }catch(e){}
+}
+Object.assign(sfx, {
+  blue:()=>{ sweep(160, 540, .6, 'sine', .07); tone(880, .3, 'triangle', .03, .1); },
+  red:()=>{ sweep(1000, 200, .4, 'sawtooth', .045); boom(.25, .08, 1500); },
+  fusion:()=>{ sweep(300, 90, .7, 'sawtooth', .05); sweep(120, 700, .7, 'sine', .05); },
+  purple:()=>{ sweep(110, 40, 1.1, 'sine', .28); boom(.9, .26, 600); tone(233, .9, 'sawtooth', .035); tone(247, .9, 'sawtooth', .035); },
+  fire:()=>{ sweep(70, 28, 1.3, 'sine', .3); boom(1.1, .3, 1000); },
+  hit:()=>{ boom(.5, .2, 700); sweep(200, 50, .5, 'sine', .15); }
+});
+
+/* ================= NARUTO extra sounds ================= */
+Object.assign(sfx, {
+  rasengan:()=>{ sweep(200, 700, .6, 'sine', .06); tone(880, .25, 'triangle', .03, .15); },
+  chidori:()=>{ for(let i=0;i<4;i++) tone(1800+Math.random()*800,.05,'square',.025,i*.06); sweep(2000,500,.4,'sawtooth',.04); },
+  shuriken:()=>{ sweep(120,900,.7,'sine',.07); sweep(1400,200,.6,'triangle',.04); },
+  amaterasu:()=>{ sweep(180,30,1.2,'sine',.25); boom(1.0,.28,500); },
+  susanoo:()=>{ sweep(60,400,1.3,'sine',.2); boom(1.0,.2,400); tone(147,1.5,'sine',.05); }
+});
+
+/* ================= JUJUTSU: Blue / Red / Hollow Purple ================= */
+const mkSlot = () => ({kind:'', x:0, y:0, tx:0, ty:0, r:0, tr:0, t0:0, seen:0, dx:0, dy:-1});
+const JJ = {slots:[mkSlot(), mkSlot()], fusion:null, purple:null, proj:[], flash:0, flashC:'255,255,255', shake:0, hist:[]};
+const CC = {blue:'#5aa8ff', red:'#ff4a55', purple:'#c070ff'};
+const poseOf = g => g === 'erase' ? 'blue' : g === 'draw' ? 'red' : g === 'undo' ? 'palm' : g;
+
+function trackPt(arr, p, now, win){ arr.push({t:now, x:p.x, y:p.y}); while(arr.length && now - arr[0].t > win) arr.shift(); }
+function velOf(arr){
+  if(arr.length < 2) return {x:0, y:0, s:0};
+  const a = arr[0], b = arr[arr.length-1], d = Math.max(16, b.t - a.t);
+  const vx = (b.x - a.x)/d, vy = (b.y - a.y)/d;
+  return {x:vx, y:vy, s:Math.hypot(vx, vy)};
+}
+
+function orbCore(ctx, x, y, r, stops){
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  stops.forEach(([o, c]) => g.addColorStop(o, c));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+}
+function drawOrb(ctx, kind, x, y, r, t, alpha){
+  if(r < 3 || alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = clamp(alpha, 0, 1); ctx.lineCap = 'round';
+  ctx.globalCompositeOperation = 'lighter';
+  const lw = Math.max(1.5, r*.05);
+  if(kind === 'blue'){
+    orbCore(ctx, x, y, r*2.8, [[0,'rgba(80,160,255,.5)'],[.4,'rgba(50,110,255,.22)'],[1,'rgba(30,70,255,0)']]);
+    ctx.lineWidth = lw*.8;
+    for(let i = 0; i < 14; i++){
+      const ph = (t*.0011 + i*.371) % 1, ang = i*2.399 + t*.0005;
+      const r1 = r*(2.6 - ph*1.45), r2 = r1 + r*.4*(1 - ph*.5), al = Math.sin(ph*Math.PI)*.8;
+      ctx.strokeStyle = 'rgba(160,215,255,' + al.toFixed(3) + ')';
+      ctx.beginPath(); ctx.moveTo(x + Math.cos(ang)*r2, y + Math.sin(ang)*r2); ctx.lineTo(x + Math.cos(ang)*r1, y + Math.sin(ang)*r1); ctx.stroke();
+    }
+    ctx.lineWidth = lw; ctx.strokeStyle = 'rgba(130,200,255,.5)';
+    for(let arm = 0; arm < 3; arm++){
+      ctx.beginPath();
+      for(let j = 0; j <= 22; j++){
+        const f = j/22, ang = arm*2.094 + t*.0045 + f*3.4, rr = r*(1.04 + f*.8);
+        const px = x + Math.cos(ang)*rr, py = y + Math.sin(ang)*rr;
+        j ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.stroke();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    orbCore(ctx, x, y, r, [[0,'#ffffff'],[.24,'#e4f5ff'],[.58,'#55aaff'],[.88,'#2457e6'],[1,'rgba(20,50,200,.9)']]);
+  } else if(kind === 'red'){
+    orbCore(ctx, x, y, r*2.8, [[0,'rgba(255,70,70,.5)'],[.4,'rgba(255,40,50,.2)'],[1,'rgba(255,20,40,0)']]);
+    ctx.lineWidth = lw;
+    for(let i = 0; i < 16; i++){
+      const ph = (t*.0013 + i*.317) % 1, ang = i*2.399 + Math.sin(t*.002 + i)*.35;
+      const r1 = r*(1.05 + ph*1.3), r2 = r1 + r*.34*(1 - ph), al = Math.sin(ph*Math.PI)*.85;
+      ctx.strokeStyle = 'rgba(255,110,90,' + al.toFixed(3) + ')';
+      ctx.beginPath(); ctx.moveTo(x + Math.cos(ang)*r1, y + Math.sin(ang)*r1); ctx.lineTo(x + Math.cos(ang)*r2, y + Math.sin(ang)*r2); ctx.stroke();
+    }
+    const rp = (t*.0011) % 1;
+    ctx.strokeStyle = 'rgba(255,120,110,' + ((1 - rp)*.7).toFixed(3) + ')'; ctx.lineWidth = lw*.7;
+    ctx.beginPath(); ctx.arc(x, y, r*(1.12 + rp*.7), 0, 7); ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+    orbCore(ctx, x, y, r, [[0,'#ffffff'],[.2,'#ffe3de'],[.52,'#ff5656'],[.88,'#c4102a'],[1,'rgba(120,0,25,.92)']]);
+  } else {
+    orbCore(ctx, x, y, r*3.2, [[0,'rgba(190,90,255,.55)'],[.45,'rgba(140,50,230,.22)'],[1,'rgba(90,20,200,0)']]);
+    ctx.lineWidth = lw*1.2;
+    for(let arm = 0; arm < 2; arm++){
+      ctx.strokeStyle = arm ? 'rgba(255,90,100,.6)' : 'rgba(90,170,255,.65)';
+      ctx.beginPath();
+      for(let j = 0; j <= 26; j++){
+        const f = j/26, ang = arm*Math.PI + t*.006 + f*3, rr = r*(1.08 + f*.9);
+        const px = x + Math.cos(ang)*rr, py = y + Math.sin(ang)*rr;
+        j ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(225,180,255,.55)'; ctx.lineWidth = lw*.8;
+    ctx.beginPath(); ctx.ellipse(x, y, r*1.75, r*.5, t*.0021, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(x, y, r*1.75, r*.5, -t*.0017 + 1.2, 0, 7); ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+    orbCore(ctx, x, y, r, [[0,'#ffffff'],[.2,'#f6e4ff'],[.5,'#bd62ff'],[.82,'#6420c0'],[1,'rgba(25,4,60,.96)']]);
+    ctx.strokeStyle = 'rgba(15,0,35,.75)'; ctx.lineWidth = lw*1.1;
+    ctx.beginPath(); ctx.arc(x, y, r*.97, 0, 7); ctx.stroke();
+  }
+  ctx.restore();
+}
+function vignette(ctx, a){
+  if(a < .01) return;
+  const g = ctx.createRadialGradient(W/2, H/2, Math.min(W, H)*.25, W/2, H/2, Math.hypot(W, H)*.6);
+  g.addColorStop(0, 'rgba(20,0,40,0)'); g.addColorStop(1, 'rgba(20,0,40,' + a.toFixed(3) + ')');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+function ambient(kind, x, y, r, ch){
+  if(Math.random() > .4*ch) return;
+  const k = sc(), a = Math.random()*Math.PI*2, ca = Math.cos(a), sa = Math.sin(a);
+  if(kind === 'blue'){
+    const d = r*(2.2 + Math.random()*.8), sp = r*.045;
+    spawn({type:'dot', x:x + ca*d, y:y + sa*d, vx:-ca*sp, vy:-sa*sp, size:(2 + Math.random()*3)*k, max:520, drag:1, color:'rgba(150,215,255,.95)'});
+  } else if(kind === 'red'){
+    const sp = r*.05*(.6 + Math.random());
+    spawn({type:'dot', x:x + ca*r*1.1, y:y + sa*r*1.1, vx:ca*sp, vy:sa*sp, size:(2 + Math.random()*3)*k, max:520, drag:.98, color:'rgba(255,125,105,.95)'});
+  } else {
+    const sp = r*.04*(.6 + Math.random()), blue = Math.random() < .5;
+    spawn({type:'dot', x:x + ca*r*1.2, y:y + sa*r*1.2, vx:-sa*sp + ca*sp*.4, vy:ca*sp + sa*sp*.4, size:(2 + Math.random()*4)*k, max:700, drag:.985,
+      color:blue ? 'rgba(130,190,255,.95)' : 'rgba(255,120,130,.95)'});
+  }
+}
+
+function jjReset(){
+  JJ.proj.forEach(p => { if(p.erased.length) pushAction({t:'clear', items:p.erased}); });
+  JJ.slots.forEach(s => s.kind = ''); JJ.fusion = null; JJ.purple = null; JJ.proj.length = 0; JJ.hist.length = 0;
+  JJ.flash = JJ.shake = 0; stage.style.transform = ''; hudKey = ''; hudUpdate();
+}
+function dissipate(s){
+  if(!s.kind) return;
+  spawn({type:'wave', x:s.x, y:s.y, size:s.r*3, max:500, color:CC[s.kind]}); s.kind = '';
+}
+function dissolvePurple(){
+  const P = JJ.purple; if(!P) return;
+  spawn({type:'wave', x:P.x, y:P.y, size:P.r*4, max:700, color:CC.purple}); JJ.purple = null;
+}
+function beginFusion(now){
+  const [a, b] = JJ.slots;
+  JJ.fusion = {t0:now, dur:700, m:mid(a, b),
+    a:{x:a.x, y:a.y, r:a.r, kind:a.kind}, b:{x:b.x, y:b.y, r:b.r, kind:b.kind}};
+  a.kind = b.kind = ''; sfx.fusion();
+}
+function fireSingle(i, now){
+  const s = JJ.slots[i], v = velOf(handState[i].vh), k = sc();
+  let dx = s.dx, dy = s.dy;
+  if(v.s > W*.0004){ dx = v.x/v.s; dy = v.y/v.s; }
+  const sp = W*.0015;
+  JJ.proj.push({kind:s.kind, mode:'dir', x:s.x, y:s.y, r:s.r, r0:s.r, vx:dx*sp, vy:dy*sp, born:now, life:2600, trail:[], erased:[]});
+  JJ.shake = Math.max(JJ.shake, .3); sfx.fire(); s.kind = '';
+}
+function firePurple(now){
+  const P = JJ.purple; if(!P) return;
+  const v = velOf(JJ.hist); let mode = 'fwd', vx = 0, vy = 0;
+  if(v.s > W*.00045){ mode = 'dir'; vx = v.x/v.s*W*.0016; vy = v.y/v.s*W*.0016; }
+  JJ.proj.push({kind:'purple', mode, x:P.x, y:P.y, r:P.r, r0:P.r, vx, vy, born:now, life:mode === 'fwd' ? 1100 : 2800, trail:[], erased:[]});
+  spawn({type:'wave', x:P.x, y:P.y, size:P.r*5, max:700, color:'#ffffff'});
+  JJ.purple = null; JJ.shake = 1; JJ.flash = .9; JJ.flashC = '220,170,255'; sfx.fire();
+  toast(mode === 'fwd' ? 'بنفش توخالی' : 'بنفش توخالی · شلیک');
+}
+function circleHits(it, x, y, r){
+  if(it.kind === 'stamp') return Math.hypot(it.x - x, it.y - y) < r + it.size*.4;
+  for(let j = 0; j < it.pts.length; j += 2) if(Math.hypot(it.pts[j].x - x, it.pts[j].y - y) < r + it.size) return true;
+  return false;
+}
+function eraseAlong(p){
+  const R = p.r*.9; let n = 0;
+  for(let i = items.length - 1; i >= 0; i--){
+    const it = items[i]; if(it.erase) continue;
+    if(circleHits(it, p.x, p.y, R)){ items.splice(i, 1); p.erased.push(it); n++; }
+  }
+  if(n){ renderInk(); sfx.pop(); }
+}
+function endProj(p, i){
+  JJ.proj.splice(i, 1);
+  const k = sc(), big = p.kind === 'purple', x = clamp(p.x, 0, W), y = clamp(p.y, 0, H);
+  spawn({type:'wave', x, y, size:(big ? 900 : 420)*k, max:900, color:CC[p.kind]});
+  spawn({type:'wave', x, y, size:(big ? 500 : 240)*k, max:700, color:'#ffffff'});
+  for(let n = 0; n < (big ? 44 : 20); n++){
+    const a = Math.random()*Math.PI*2, sp = (2 + Math.random()*9)*k;
+    spawn({type:'dot', x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, size:(3 + Math.random()*5)*k, max:700 + Math.random()*700, drag:.97, grav:.02*k, color:CC[p.kind]});
+  }
+  JJ.shake = Math.max(JJ.shake, big ? .9 : .4); JJ.flash = Math.max(JJ.flash, big ? .8 : .35);
+  JJ.flashC = big ? '210,150,255' : p.kind === 'blue' ? '120,180,255' : '255,120,120'; sfx.hit();
+  if(p.erased.length) pushAction({t:'clear', items:p.erased});
+}
+
+let hudKey = '';
+function hudUpdate(){
+  const b = JJ.slots.some(s => s.kind === 'blue'), r = JJ.slots.some(s => s.kind === 'red'), p = !!(JJ.purple || JJ.fusion);
+  const key = (b ? 1 : 0) + '' + (r ? 1 : 0) + (p ? 1 : 0);
+  if(key === hudKey) return; hudKey = key;
+  $('hB').classList.toggle('on', b); $('hR').classList.toggle('on', r); $('hP').classList.toggle('on', p);
+}
+
+/* called on every detection result while in jujutsu mode */
+function jjkUpdate(pls, now){
+  const k = sc(), both = pls[0] && pls[1];
+  for(let i = 0; i < 2; i++){
+    const pl = pls[i]; if(!pl) continue;
+    const h = handState[i], s = JJ.slots[i], pose = poseOf(h.gesture), size = dist(pl[0], pl[9]) || 1;
+    trackPt(h.vh, pl[9], now, 320);
+    if((pose === 'blue' || pose === 'red') && !JJ.purple && !JJ.fusion){
+      const tip = pose === 'blue' ? mid(pl[8], pl[12]) : pl[8];
+      const base = pose === 'blue' ? mid(pl[5], pl[9]) : pl[5];
+      let dx = tip.x - base.x, dy = tip.y - base.y; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
+      const r = clamp(size*.5, 30*k, 105*k);
+      if(s.kind !== pose){
+        s.kind = pose; s.t0 = now; s.x = tip.x; s.y = tip.y; s.r = 0;
+        pose === 'blue' ? sfx.blue() : sfx.red();
+      }
+      s.seen = now; s.dx = dx; s.dy = dy; s.tr = r; s.tx = tip.x + dx*r; s.ty = tip.y + dy*r;
+    } else if(s.kind){
+      if(pose === 'palm' && now - s.t0 > 650 && now - s.seen < 450) fireSingle(i, now);
+      else if(pose === 'fist') dissipate(s);
+    }
+  }
+  JJ.slots.forEach(s => { if(s.kind && now - s.seen > 380) dissipate(s); });
+
+  const [a, b] = JJ.slots;
+  if(!JJ.fusion && !JJ.purple && a.kind && b.kind && a.kind !== b.kind && now - a.seen < 250 && now - b.seen < 250){
+    if(Math.hypot(a.tx - b.tx, a.ty - b.ty) < (a.tr + b.tr)*1.4 + 30*k) beginFusion(now);
+  }
+
+  const P = JJ.purple;
+  if(P){
+    if(both){
+      const m = mid(pls[0][9], pls[1][9]);
+      P.tx = m.x; P.ty = m.y; P.tr = clamp(dist(pls[0][9], pls[1][9])*.4, 46*k, 150*k); P.seen = now;
+      trackPt(JJ.hist, m, now, 320);
+      const g0 = poseOf(handState[0].gesture), g1 = poseOf(handState[1].gesture);
+      if(g0 === 'fist' && g1 === 'fist') dissolvePurple();
+      else if(g0 === 'palm' && g1 === 'palm' && now - P.born > 450) firePurple(now);
+    } else if(now - P.seen > 700) dissolvePurple();
+  } else JJ.hist.length = 0;
+}
+
+/* called every animation frame */
+function jjkStep(now, dt){
+  if(app.mode !== 'jjk') return;
+  const k = sc(), sm = 1 - Math.exp(-dt/55);
+
+  JJ.slots.forEach(s => {
+    if(!s.kind) return;
+    s.x += (s.tx - s.x)*sm; s.y += (s.ty - s.y)*sm; s.r += (s.tr - s.r)*sm*.8;
+    const ch = clamp((now - s.t0)/650, 0, 1);
+    const la = now - s.seen > 120 ? clamp(1 - (now - s.seen - 120)/260, 0, 1) : 1;
+    drawOrb(mg, s.kind, s.x, s.y, s.r*(.25 + .75*easeOutBack(ch)), now, la);
+    ambient(s.kind, s.x, s.y, s.r, ch);
+  });
+
+  const F = JJ.fusion;
+  if(F){
+    const f = clamp((now - F.t0)/F.dur, 0, 1), e = f*f;
+    [F.a, F.b].forEach(o => drawOrb(mg, o.kind, o.x + (F.m.x - o.x)*e, o.y + (F.m.y - o.y)*e, o.r*(1 - .15*e), now, 1));
+    ambient('purple', F.m.x, F.m.y, (F.a.r + F.b.r)*.5*f, 1);
+    if(f >= 1){
+      JJ.fusion = null;
+      const r = clamp((F.a.r + F.b.r)*.75, 50*k, 140*k);
+      JJ.purple = {x:F.m.x, y:F.m.y, tx:F.m.x, ty:F.m.y, r, tr:r, born:now, seen:now};
+      JJ.flash = 1; JJ.flashC = '200,140,255'; JJ.shake = .8; sfx.purple();
+      spawn({type:'wave', x:F.m.x, y:F.m.y, size:r*6, max:800, color:CC.purple});
+      toast('بنفش توخالی آماده‌ست · کف دستا رو باز کن');
+    }
+  }
+
+  const P = JJ.purple;
+  if(P){
+    P.x += (P.tx - P.x)*sm; P.y += (P.ty - P.y)*sm; P.r += (P.tr - P.r)*sm*.7;
+    const ch = clamp((now - P.born)/500, 0, 1);
+    const la = now - P.seen > 150 ? clamp(1 - (now - P.seen - 150)/550, 0, 1) : 1;
+    vignette(fx, .38*ch*la);
+    drawOrb(mg, 'purple', P.x, P.y, P.r*(.4 + .6*easeOutBack(ch)), now, la);
+    ambient('purple', P.x, P.y, P.r, ch);
+  }
+
+  for(let i = JJ.proj.length - 1; i >= 0; i--){
+    const p = JJ.proj[i], f = (now - p.born)/p.life;
+    if(p.mode === 'dir'){
+      p.x += p.vx*dt; p.y += p.vy*dt;
+      p.trail.unshift({x:p.x, y:p.y}); if(p.trail.length > 16) p.trail.pop();
+    } else {
+      p.r = p.r0 + (Math.hypot(W, H)*.8 - p.r0)*Math.pow(clamp(f, 0, 1), 2.2);
+    }
+    const out = p.mode === 'dir' && (p.x < -p.r*2 || p.x > W + p.r*2 || p.y < -p.r*2 || p.y > H + p.r*2);
+    if(f >= 1 || out){ endProj(p, i); continue; }
+    if(p.mode === 'dir'){
+      mg.save(); mg.globalCompositeOperation = 'lighter';
+      const rgb = p.kind === 'blue' ? '60,150,255' : p.kind === 'red' ? '255,70,80' : '180,90,255';
+      for(let j = 2; j < p.trail.length; j += 2){
+        const q = p.trail[j], t = j/p.trail.length;
+        mg.fillStyle = 'rgba(' + rgb + ',' + (.3*(1 - t)).toFixed(3) + ')';
+        mg.beginPath(); mg.arc(q.x, q.y, p.r*(1.1 - t*.6), 0, 7); mg.fill();
+      }
+      mg.restore();
+    }
+    const fade = p.mode === 'fwd' ? 1 - clamp((f - .6)/.4, 0, 1) : 1;
+    drawOrb(mg, p.kind, p.x, p.y, p.r, now, fade);
+    if(p.mode === 'dir') ambient(p.kind, p.x, p.y, p.r, 1);
+    if(p.kind === 'purple') eraseAlong(p);
+  }
+
+  if(JJ.flash > .01){
+    fx.fillStyle = 'rgba(' + JJ.flashC + ',' + (JJ.flash*.55).toFixed(3) + ')'; fx.fillRect(0, 0, W, H);
+    JJ.flash = Math.max(0, JJ.flash - dt/420);
+  }
+  if(JJ.shake > .01){
+    const m = JJ.shake*12;
+    stage.style.transform = 'translate(' + ((Math.random() - .5)*m).toFixed(1) + 'px,' + ((Math.random() - .5)*m).toFixed(1) + 'px)';
+    JJ.shake = Math.max(0, JJ.shake - dt/650);
+  } else if(stage.style.transform) stage.style.transform = '';
+  hudUpdate();
+}
+
+/* ================= NARUTO: hand-sign technique mode ================= */
+const NAR_CHIP = {draw:'یک انگشت · علامت اول', erase:'دو انگشت · علامت دوم', palm:'کف دست باز', fist:'مشت', undo:'کف دست', none:'ژست را واضح نگه دار'};
+const NAR = {seq:[[],[]], last:['',''], changed:[0,0], projectiles:[], flash:0, flashC:'80,180,255', shake:0,
+  susanoo:0, susanooSeen:0, susanooHold:0, active:{rasengan:0,chidori:0,shuriken:0}};
+const NAR_COL = {rasengan:'#55aaff',chidori:'#9be9ff',shuriken:'#e7f6ff',amaterasu:'#16131e',susanoo:'#8a65ff'};
+function narReset(){
+  NAR.seq.forEach(a=>a.length=0); NAR.last=['','']; NAR.changed=[0,0]; NAR.projectiles.length=0;
+  NAR.flash=NAR.shake=NAR.susanoo=NAR.susanooHold=0; NAR.active={rasengan:0,chidori:0,shuriken:0,amaterasu:0};
+  stage.style.transform=''; narHudUpdate();
+}
+function narHudUpdate(){
+  $('hNR').classList.toggle('on', !!(NAR.active.rasengan || NAR.active.shuriken));
+  $('hNC').classList.toggle('on', !!NAR.active.chidori);
+  $('hNS').classList.toggle('on', !!(NAR.susanoo || NAR.active.amaterasu));
+}
+function narBurst(x,y,color,count=22){
+  const k=sc(); spawn({type:'wave',x,y,size:90*k,max:650,color});
+  for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2, sp=(2+Math.random()*8)*k;spawn({type:'dot',x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,size:(2+Math.random()*4)*k,max:500+Math.random()*600,drag:.97,color});}
+}
+function narFire(kind,x,y,now,dirX=0.8,dirY=-0.15){
+  const k=sc(), r=kind==='rasengan'?clamp(W*.075,35*k,100*k):kind==='chidori'?clamp(W*.055,28*k,75*k):clamp(W*.045,24*k,58*k);
+  const mag=Math.hypot(dirX,dirY)||1; dirX/=mag; dirY/=mag;
+  const speed=kind==='shuriken'?W*.00135:kind==='chidori'?W*.0012:W*.00105;
+  NAR.projectiles.push({kind,x,y,r,born:now,life:kind==='shuriken'?1500:1200,vx:dirX*speed,vy:dirY*speed,trail:[],rot:0,seed:Math.random()*Math.PI*2,px:x,py:y,scale:0});
+  NAR.flash=Math.max(NAR.flash,kind==='amaterasu'?.35:.16); NAR.flashC=kind==='amaterasu'?'20,10,30':'90,180,255';
+  NAR.shake=Math.max(NAR.shake,kind==='rasengan'?.32:.18); NAR.active[kind]=1.15;
+  if(kind==='rasengan'||kind==='chidori'){for(let i=0;i<12;i++){const a=i*Math.PI/6;spawn({type:'dot',x,y,vx:Math.cos(a)*5*k,vy:Math.sin(a)*5*k,size:2.5*k,max:260,drag:.93,color:NAR_COL[kind]});}}
+  sfx[kind] && sfx[kind](); narBurst(x,y,NAR_COL[kind]||'#8a65ff',kind==='rasengan'?28:18);
+  toast(({rasengan:'راسن‌گان!',chidori:'چیدوری!',shuriken:'شوریکن پرتاب شد!',amaterasu:'آماتراسو!',susanoo:'سوسانو فعال شد!'})[kind]||'تکنیک اجرا شد');
+}
+function narMatch(seq, pattern){return seq.length>=pattern.length && pattern.every((v,i)=>seq[seq.length-pattern.length+i]===v);}
+function narUpdate(pls,now){
+  const both=!!(pls[0]&&pls[1]);
+  if(both && poseOf(handState[0].gesture)==='palm' && poseOf(handState[1].gesture)==='palm'){
+    if(!NAR.susanooHold) NAR.susanooHold=now;
+    NAR.susanooSeen=now;
+    if(now-NAR.susanooHold>650 && now-NAR.susanooHold<720){
+      NAR.susanoo=2.6; NAR.active.susanoo=1; NAR.flash=.35; NAR.flashC='155,100,255'; NAR.shake=.25; sfx.susanoo();
+      const m=mid(pls[0][9],pls[1][9]); narBurst(m.x,m.y,NAR_COL.susanoo,30); toast('سوسانو!');
+    }
+  }else NAR.susanooHold=0;
+  for(let i=0;i<2;i++){
+    const pl=pls[i]; if(!pl){NAR.last[i]='';continue;}
+    const h=handState[i], g=h.gesture;
+    if(!g || g==='none' || g===NAR.last[i]) continue;
+    NAR.last[i]=g;
+    const sig=(g==='draw'?'1':g==='erase'?'2':g==='fist'?'F':g==='palm'?'P':'');
+    if(!sig) continue;
+    NAR.seq[i].push(sig); if(NAR.seq[i].length>6) NAR.seq[i].shift();
+    const x=pl[8].x,y=pl[8].y;
+    if(narMatch(NAR.seq[i],['1','2','1'])){NAR.seq[i]=[];narFire('rasengan',x,y,now,-.35,-.15);}
+    else if(narMatch(NAR.seq[i],['2','1','2'])){NAR.seq[i]=[];narFire('chidori',x,y,now,.7,-.15);}
+    else if(narMatch(NAR.seq[i],['P','1','P','2'])){NAR.seq[i]=[];narFire('shuriken',x,y,now,.95,-.08);}
+    else if(narMatch(NAR.seq[i],['F','1','F'])){NAR.seq[i]=[];narFire('amaterasu',x,y,now,.45,-.1);}
+  }
+}
+function drawRasengan(ctx,x,y,r,now,alpha=1){
+  ctx.save();ctx.globalAlpha=alpha;ctx.globalCompositeOperation='lighter';
+  const g=ctx.createRadialGradient(x-r*.15,y-r*.15,1,x,y,r);g.addColorStop(0,'#ffffff');g.addColorStop(.18,'#d8f5ff');g.addColorStop(.48,'#55baff');g.addColorStop(.78,'rgba(30,105,255,.45)');g.addColorStop(1,'rgba(20,70,255,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  const pulse=1+Math.sin(now*.018)*.055;
+  ctx.strokeStyle='rgba(180,235,255,.65)';ctx.lineWidth=Math.max(1,r*.025);ctx.beginPath();ctx.arc(x,y,r*1.12*pulse,0,Math.PI*2);ctx.stroke();
+  for(let i=0;i<9;i++){const a=now*.006+i*Math.PI*2/9;ctx.strokeStyle='rgba(220,250,255,'+(.45+.4*Math.sin(now*.01+i)).toFixed(3)+')';ctx.lineWidth=Math.max(1,r*.03);ctx.beginPath();ctx.ellipse(x,y,r*(.42+(i%3)*.14),r*.22,a,0,Math.PI*2);ctx.stroke();}
+  for(let i=0;i<12;i++){const a=-now*.004+i*Math.PI*2/12, rr=r*(.72+.12*Math.sin(now*.012+i));ctx.fillStyle='rgba(225,250,255,.9)';ctx.beginPath();ctx.arc(x+Math.cos(a)*rr,y+Math.sin(a)*rr,Math.max(1.2,r*.025),0,Math.PI*2);ctx.fill();}
+  ctx.restore();
+}
+function drawChidori(ctx,x,y,r,now,alpha=1){
+  ctx.save();ctx.globalAlpha=alpha;ctx.globalCompositeOperation='lighter';ctx.shadowColor='#79dfff';ctx.shadowBlur=r*.8;
+  for(let i=0;i<18;i++){const a=i*Math.PI/9+now*.002, rr=r*(.18+((i*7)%7)*.095), ex=x+Math.cos(a+.22*Math.sin(now*.02+i))*r, ey=y+Math.sin(a+.22*Math.sin(now*.02+i))*r;ctx.strokeStyle=i%3?'#a9efff':'#ffffff';ctx.lineWidth=Math.max(1,r*(i%3===0?.045:.025));ctx.beginPath();ctx.moveTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr);ctx.lineTo(ex,ey);ctx.lineTo(ex-Math.cos(a+.7)*r*.22,ey-Math.sin(a+.7)*r*.22);ctx.stroke();}
+  ctx.fillStyle='rgba(120,220,255,.65)';ctx.beginPath();ctx.arc(x,y,r*.32*(1+Math.sin(now*.04)*.08),0,Math.PI*2);ctx.fill();ctx.restore();
+}
+function drawShuriken(ctx,x,y,r,now,alpha=1){
+  ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);ctx.rotate(now*.009);ctx.globalCompositeOperation='lighter';ctx.shadowColor='#c8f2ff';ctx.shadowBlur=r*.5;
+  ctx.strokeStyle='rgba(150,225,255,.45)';ctx.lineWidth=Math.max(1,r*.08);ctx.beginPath();ctx.arc(0,0,r*1.12,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='#eafaff';ctx.strokeStyle='#79cfff';ctx.lineWidth=Math.max(1,r*.07);ctx.beginPath();
+  for(let i=0;i<8;i++){const a=i*Math.PI/4,rr=i%2?r*.24:r;const px=Math.cos(a)*rr,py=Math.sin(a)*rr;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#9be9ff';ctx.beginPath();ctx.arc(0,0,r*.13,0,Math.PI*2);ctx.fill();ctx.restore();
+}
+function narAmbient(kind,x,y,r,alpha){
+  const col=NAR_COL[kind]||'#8a65ff';for(let i=0;i<2;i++){const a=performance.now()*.002+i*Math.PI;mg.strokeStyle=col;mg.globalAlpha=.24*alpha;mg.lineWidth=2*sc();mg.beginPath();mg.ellipse(x,y,r*(1.3+i*.25),r*(.55+i*.1),a,0,Math.PI*2);mg.stroke();}mg.globalAlpha=1;
+}
+function narTechStep(now,dt){
+  for(const k of Object.keys(NAR.active)) NAR.active[k]=Math.max(0,(NAR.active[k]||0)-dt/1000);
+  NAR.susanoo=Math.max(0,NAR.susanoo-dt/1000);
+  if(NAR.susanoo>.01){const x=W*.5,y=H*.53,r=Math.min(W,H)*.3;mg.save();mg.globalCompositeOperation='lighter';mg.strokeStyle='rgba(155,115,255,'+Math.min(.65,NAR.susanoo*.25)+')';mg.lineWidth=8*sc();mg.shadowColor='#966aff';mg.shadowBlur=25*sc();mg.beginPath();mg.ellipse(x,y,r*.72,r,0,Math.PI,Math.PI*2);mg.stroke();mg.beginPath();mg.ellipse(x,y,r*.72,r,0,0,Math.PI);mg.stroke();mg.restore();}
+  for(let i=NAR.projectiles.length-1;i>=0;i--){const p=NAR.projectiles[i],f=(now-p.born)/p.life;
+    p.px=p.x;p.py=p.y;
+    const wobble=p.kind==='chidori'?Math.sin(now*.035+p.seed)*.7:0;
+    p.x+=(p.vx+wobble)*dt;p.y+=(p.vy+Math.sin(now*.006+p.seed)*.06)*dt;
+    p.rot+=dt*(p.kind==='shuriken'?.018:.006);p.scale+=(1-p.scale)*(1-Math.exp(-dt/85));
+    p.trail.unshift({x:p.x,y:p.y});if(p.trail.length>18)p.trail.pop();
+    if(f>=1||p.x<-p.r*2||p.x>W+p.r*2||p.y<-p.r*2||p.y>H+p.r*2){NAR.projectiles.splice(i,1);narBurst(clamp(p.x,0,W),clamp(p.y,0,H),NAR_COL[p.kind]||'#8a65ff',12);continue;}
+    mg.save();mg.globalCompositeOperation='lighter';for(let j=p.trail.length-1;j>=1;j--){const q=p.trail[j];mg.globalAlpha=Math.pow(1-j/p.trail.length,1.5)*.72;mg.strokeStyle=NAR_COL[p.kind]||'#8a65ff';mg.lineWidth=Math.max(1,p.r*.2*(1-j/p.trail.length));mg.beginPath();mg.moveTo(q.x,q.y);mg.lineTo(p.trail[j-1].x,p.trail[j-1].y);mg.stroke();}mg.restore();
+    const a=1-clamp((f-.78)/.22,0,1), rr=p.r*(.72+.28*p.scale);
+    if(p.kind==='rasengan')drawRasengan(mg,p.x,p.y,rr,now,a);
+    else if(p.kind==='chidori')drawChidori(mg,p.x,p.y,rr,now,a);
+    else if(p.kind==='shuriken')drawShuriken(mg,p.x,p.y,rr,now,a);
+    else {drawChidori(mg,p.x,p.y,rr,now,a);narAmbient(p.kind,p.x,p.y,rr,a);}
+  }
+  if(NAR.flash>.01){fx.fillStyle='rgba('+NAR.flashC+','+(NAR.flash*.4).toFixed(3)+')';fx.fillRect(0,0,W,H);NAR.flash=Math.max(0,NAR.flash-dt/500);}
+  if(NAR.shake>.01){const m=NAR.shake*8;stage.style.transform='translate('+((Math.random()-.5)*m).toFixed(1)+'px,'+((Math.random()-.5)*m).toFixed(1)+'px)';NAR.shake=Math.max(0,NAR.shake-dt/650);}else if(app.mode==='naruto'&&stage.style.transform)stage.style.transform='';
+  narHudUpdate();
+}
+function narStep(now,dt){if(app.mode!=='naruto')return;narTechStep(now,dt);}
+
+/* ================= mode / toolbar wiring ================= */
+function setMode(m){
+  if(app.mode === m) return;
+  app.mode = m;
+  handState.forEach(h => resetHand(h)); endGrab(); jjReset(); narReset();
+  $('mDraw').classList.toggle('on', m === 'draw');
+  $('mJjk').classList.toggle('on', m === 'jjk');
+  $('mNaruto').classList.toggle('on', m === 'naruto');
+  $('hud').classList.toggle('show', m === 'jjk' || m === 'naruto');
+  ['hB','hR','hP'].forEach(id => $(id).style.display = m === 'jjk' ? '' : 'none');
+  ['hNR','hNC','hNS'].forEach(id => $(id).style.display = m === 'naruto' ? '' : 'none');
+  toast(m === 'jjk' ? 'حالت جوجوتسو' : m === 'naruto' ? 'حالت ناروتو' : 'حالت نقاشی');
+}
+$('mDraw').onclick = () => setMode('draw');
+$('mJjk').onclick = () => { ensureAudio(); setMode('jjk'); };
+$('mNaruto').onclick = () => { ensureAudio(); setMode('naruto'); };
+
+/* ================= environment checks ================= */
+(function envCheck(){
+  const warns = [];
+  if(/Telegram|Instagram|FBAN|FBAV|Line\/|MicroMessenger|WhatsApp|Eitaa|Bale|Soroush|Rubika|; wv\)/i.test(UA))
+    warns.push('به نظر میاد این صفحه داخل یه برنامه (مثل تلگرام یا اینستاگرام) باز شده. اون مرورگرهای داخلی دوربین رو بلاک می‌کنن. لینک رو توی Chrome یا Safari باز کن.');
+  if(!window.isSecureContext)
+    warns.push('این صفحه با آدرس امن (https) باز نشده، برای همین مرورگر اجازه استفاده از دوربین رو نمیده.');
+  if(location.protocol === 'file:' && IS_MOBILE)
+    warns.push('فایل مستقیم از حافظه گوشی باز شده. برای کار کردن دوربین، صفحه باید از یه لینک https باز بشه.');
+  const box = $('warn');
+  warns.forEach(t=>{ const p = document.createElement('p'); p.textContent = t; box.appendChild(p); });
+})();
+
+/* ================= camera + hand model (with CDN fallbacks) ================= */
+let handsModel = null;
+const HANDS_VER = '0.4.1675469240';
+const BASES = [];
+if(location.protocol !== 'file:') BASES.push('./mediapipe/');
+BASES.push('https://cdn.jsdelivr.net/npm/@mediapipe/hands@' + HANDS_VER + '/');
+BASES.push('https://unpkg.com/@mediapipe/hands@' + HANDS_VER + '/');
+BASES.push('https://fastly.jsdelivr.net/npm/@mediapipe/hands@' + HANDS_VER + '/');
+
+function setStatus(t){ $('status').textContent = t; }
+function report(msg){
+  $('err').textContent = msg;
+  if($('start').classList.contains('hidden')) toast(msg);
+}
+function loadScript(src, ms){
+  return new Promise((res, rej)=>{
+    const s = document.createElement('script');
+    if(/^https?:/.test(src)) s.crossOrigin = 'anonymous';
+    s.src = src;
+    const t = setTimeout(()=>{ s.remove(); rej(new Error('timeout')); }, ms);
+    s.onload = () => { clearTimeout(t); res(); };
+    s.onerror = () => { clearTimeout(t); s.remove(); rej(new Error('fail')); };
+    document.head.appendChild(s);
+  });
+}
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), ms))]);
+
+async function createHands(){
+  for(const base of BASES){
+    try{
+      const host = base.startsWith('http') ? new URL(base).host : 'پوشه محلی';
+      setStatus('در حال دانلود مدل تشخیص دست از ' + host + ' ...');
+      if(typeof Hands === 'undefined') await loadScript(base + 'hands.js', 12000);
+      if(typeof Hands === 'undefined') continue;
+      const m = new Hands({locateFile: f => base + f});
+      m.setOptions({maxNumHands:2, modelComplexity:app.quality, minDetectionConfidence:.6, minTrackingConfidence:.6});
+      m.onResults(onResults);
+      await withTimeout(m.initialize(), 40000);
+      return m;
+    }catch(e){ /* try next source */ }
+  }
+  throw new Error('nolib');
+}
+
+async function getStream(){
+  try{
+    return await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'user', width:{ideal:IS_MOBILE ? 960 : 1280}, height:{ideal:IS_MOBILE ? 540 : 720}, frameRate:{ideal:30}}, audio:false });
+  }catch(e){
+    if(e.name === 'OverconstrainedError' || e.name === 'ConstraintNotSatisfiedError')
+      return await navigator.mediaDevices.getUserMedia({video:true, audio:false});
+    throw e;
+  }
+}
+
+async function startCamera(){
+  if(app.running || app.starting) return;
+  app.starting = true; ensureAudio();
+  const btn = $('startBtn');
+  btn.disabled = true; btn.textContent = 'در حال آماده‌سازی...'; $('err').textContent = ''; setStatus('');
+  if($('start').classList.contains('hidden')) toast('در حال روشن کردن دوربین...');
+  try{
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('nocam');
+    setStatus('در حال باز کردن دوربین...');
+    const stream = await getStream();
+    video.srcObject = stream; await video.play();
+    setWorld(video.videoWidth || 1280, video.videoHeight || 720);
+
+    handsModel = await createHands();
+
+    app.running = true; setStatus('');
+    $('start').classList.add('hidden'); $('cam').hidden = true;
+    applyBg(); toast('دستت رو جلوی دوربین بگیر');
+
+    let busy = false;
+    const step = async () => {
+      if(!busy && video.readyState >= 2){
+        busy = true;
+        try{ await handsModel.send({image:video}); }catch(e){}
+        busy = false;
+      }
+      schedule();
+    };
+    const schedule = () => video.requestVideoFrameCallback ? video.requestVideoFrameCallback(step) : requestAnimationFrame(step);
+    schedule();
+  }catch(e){
+    setStatus('');
+    if(video.srcObject){ video.srcObject.getTracks().forEach(t=>t.stop()); video.srcObject = null; }
+    report(
+      e.name === 'NotAllowedError' ? 'دسترسی به دوربین داده نشد. توی تنظیمات مرورگر اجازه بده و دوباره امتحان کن.' :
+      e.name === 'NotFoundError' ? 'دوربینی پیدا نشد.' :
+      e.name === 'NotReadableError' ? 'دوربین توسط برنامه دیگه‌ای در حال استفاده‌ست. اون رو ببند و دوباره امتحان کن.' :
+      e.message === 'nocam' ? 'این مرورگر یا آدرس دسترسی به دوربین رو پشتیبانی نمی‌کنه. صفحه باید با https باز بشه.' :
+      e.message === 'nolib' ? 'مدل تشخیص دست دانلود نشد. اینترنت یا فیلترشکن رو چک کن، یا فایل‌های مدل رو کنار صفحه توی پوشه mediapipe بذار.' :
+      'مشکلی پیش اومد: ' + (e.message || e.name));
+    btn.textContent = 'تلاش دوباره';
+  }finally{
+    btn.disabled = false; app.starting = false;
+    if(app.running) btn.textContent = 'روشن کردن دوربین';
+  }
+}
+$('startBtn').onclick = startCamera;
+$('mouseBtn').onclick = () => {
+  $('start').classList.add('hidden'); ensureAudio();
+  $('chip').textContent = 'دوربین خاموشه، با ماوس یا لمس بکش';
+  toast('کلیک راست یا Shift: پاک‌کن');
+};
+
+/* ================= init ================= */
+inkC.width = stC.width = mgC.width = fxC.width = W;
+inkC.height = stC.height = mgC.height = fxC.height = H;
+applyBg(); fit();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
